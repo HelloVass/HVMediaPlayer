@@ -1,4 +1,4 @@
-package org.geeklub.hvmediaplayer.widgets;
+package org.geeklub.hvmediaplayer.widgets.controller;
 
 import android.content.Context;
 import android.util.AttributeSet;
@@ -7,14 +7,12 @@ import android.widget.FrameLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import org.geeklub.hvmediaplayer.R;
-import org.geeklub.hvmediaplayer.states.FinishedState;
-import org.geeklub.hvmediaplayer.states.PauseState;
-import org.geeklub.hvmediaplayer.states.PreparedState;
-import org.geeklub.hvmediaplayer.states.StartState;
 import org.geeklub.hvmediaplayer.utils.TimeUtil;
 
 /**
  * Created by HelloVass on 16/3/24.
+ *
+ * 操作栏
  */
 public class HVMediaController extends FrameLayout {
 
@@ -36,23 +34,9 @@ public class HVMediaController extends FrameLayout {
 
   private HVMediaControllerCallback mHVMediaControllerCallback;
 
-  private HVMediaPlayer.IHVMediaPlayer mIHVMediaPlayer;
-
   private boolean mIsEnterFullScreen = false;
 
   private boolean mIsDraggingSeekBar = false;
-
-  private boolean mIsFromUser = false;
-
-  private State mPreparedState = new PreparedState();
-
-  private State mStartState = new StartState();
-
-  private State mPauseState = new PauseState();
-
-  private State mFinishedState = new FinishedState();
-
-  private State mState = mPreparedState;
 
   public HVMediaController(Context context) {
     this(context, null);
@@ -67,44 +51,24 @@ public class HVMediaController extends FrameLayout {
     init();
   }
 
-  public void setState(State state) {
-    mState = state;
-  }
-
-  public State getState() {
-    return mState;
-  }
-
-  public State getPreparedState() {
-    return mPreparedState;
-  }
-
-  public State getStartState() {
-    return mStartState;
-  }
-
-  public State getPauseState() {
-    return mPauseState;
-  }
-
-  public State getFinishedState() {
-    return mFinishedState;
-  }
-
   public void setHVMediaControllerCallback(HVMediaControllerCallback callback) {
     mHVMediaControllerCallback = callback;
   }
 
-  public void setIHVMediaPlayer(HVMediaPlayer.IHVMediaPlayer IHVMediaPlayer) {
-    mIHVMediaPlayer = IHVMediaPlayer;
+  public boolean isEnterFullScreen() {
+    return mIsEnterFullScreen;
   }
 
-  public void setCurrentTime(long timeInMillis) {
-    mCurrentTime.setText(TimeUtil.getTime(timeInMillis));
+  public void setIsEnterFullScreen(boolean isEnterFullScreen) {
+    mIsEnterFullScreen = isEnterFullScreen;
   }
 
   public boolean isDraggingSeekBar() {
     return mIsDraggingSeekBar;
+  }
+
+  public void setCurrentTime(long timeInMillis) {
+    mCurrentTime.setText(TimeUtil.getTime(timeInMillis));
   }
 
   public void setEndTime(long timeInMillis) {
@@ -154,7 +118,7 @@ public class HVMediaController extends FrameLayout {
 
     mPauseButton.setOnClickListener(new OnClickListener() {
       @Override public void onClick(View v) {
-        if (mHVMediaControllerCallback != null && mIHVMediaPlayer.isPlaying()) {
+        if (mHVMediaControllerCallback != null) {
           mHVMediaControllerCallback.pause();
         }
       }
@@ -162,7 +126,7 @@ public class HVMediaController extends FrameLayout {
 
     mPlayButton.setOnClickListener(new OnClickListener() {
       @Override public void onClick(View v) {
-        if (mHVMediaControllerCallback != null && !mIHVMediaPlayer.isPlaying()) {
+        if (mHVMediaControllerCallback != null) {
           mHVMediaControllerCallback.start();
         }
       }
@@ -174,11 +138,9 @@ public class HVMediaController extends FrameLayout {
 
         if (mHVMediaControllerCallback != null && mIsEnterFullScreen) {
 
-          showOrHideShrinkButton(false);// 隐藏“退出全屏”按钮
-          showOrHideExpandButton(true);// 显示“进入全屏”按钮
+          showOrHideShrinkButton(false); // 隐藏“退出全屏”按钮
+          showOrHideExpandButton(true); // 显示“进入全屏”按钮
           mHVMediaControllerCallback.shrink();
-
-          mIsEnterFullScreen = false;
         }
       }
     });
@@ -192,8 +154,6 @@ public class HVMediaController extends FrameLayout {
           showOrHideExpandButton(false); // 隐藏“进入全屏”按钮
           showOrHideShrinkButton(true); // 显示“退出全屏”按钮
           mHVMediaControllerCallback.expand();
-
-          mIsEnterFullScreen = true;
         }
       }
     });
@@ -202,7 +162,12 @@ public class HVMediaController extends FrameLayout {
     mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 
       @Override public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-        mIsFromUser = fromUser;
+
+        if (!fromUser) {
+          return;
+        }
+
+        mHVMediaControllerCallback.updateCurrentTimeWhenDragging(progress);
       }
 
       @Override public void onStartTrackingTouch(SeekBar seekBar) {
@@ -213,22 +178,11 @@ public class HVMediaController extends FrameLayout {
 
         mIsDraggingSeekBar = false;
 
-        if (mHVMediaControllerCallback != null && mIsFromUser) {
+        if (mHVMediaControllerCallback != null) {
           mHVMediaControllerCallback.onProgressChanged(seekBar.getProgress());
         }
       }
     });
-  }
-
-  public interface State {
-
-    void preparedState(HVVideoView videoView, HVMediaController controller);
-
-    void startState(HVVideoView videoView, HVMediaController controller);
-
-    void pauseState(HVVideoView videoView, HVMediaController controller);
-
-    void finishedState(HVVideoView videoView, HVMediaController controller);
   }
 
   public interface HVMediaControllerCallback {
@@ -240,6 +194,8 @@ public class HVMediaController extends FrameLayout {
     void shrink();
 
     void expand();
+
+    void updateCurrentTimeWhenDragging(int progress);
 
     void onProgressChanged(int progress);
   }
