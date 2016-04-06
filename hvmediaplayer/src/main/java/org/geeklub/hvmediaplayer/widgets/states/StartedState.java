@@ -1,8 +1,7 @@
-package org.geeklub.hvmediaplayer.widgets.player_states.concrete_state;
+package org.geeklub.hvmediaplayer.widgets.states;
 
-import org.geeklub.hvmediaplayer.widgets.controller.HVMediaController;
-import org.geeklub.hvmediaplayer.widgets.playable_components.IHVPlayable;
-import org.geeklub.hvmediaplayer.widgets.player_states.AbsMediaPlayerState;
+import org.geeklub.hvmediaplayer.widgets.factory.HVController;
+import org.geeklub.hvmediaplayer.widgets.factory.HVPlayable;
 
 /**
  * Created by HelloVass on 16/3/26.
@@ -13,7 +12,7 @@ public class StartedState extends AbsMediaPlayerState {
 
   private static final String TAG = StartedState.class.getSimpleName();
 
-  public StartedState(IHVPlayable playable, HVMediaController controller) {
+  public StartedState(HVPlayable playable, HVController controller) {
     super(playable, controller);
   }
 
@@ -27,11 +26,11 @@ public class StartedState extends AbsMediaPlayerState {
 
   @Override protected void start() {
 
-    mPlayable.resetUpdatePlayableTimer();
-    mPlayable.startIHVPlayable();
+    mPlayable.resetPlayableTimer();
+    mPlayable.startHVPlayable();
 
-    mController.showOrHidePlayButton(false);
-    mController.showOrHidePauseButton(true);
+    mController.hidePlayButton();
+    mController.showPauseButton();
   }
 
   @Override protected void pause() {

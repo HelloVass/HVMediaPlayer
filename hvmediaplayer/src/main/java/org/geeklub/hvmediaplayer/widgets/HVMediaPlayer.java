@@ -3,8 +3,8 @@ package org.geeklub.hvmediaplayer.widgets;
 import android.content.Context;
 import android.graphics.Color;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,14 +12,15 @@ import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.RelativeLayout;
 import org.geeklub.hvmediaplayer.utils.DensityUtil;
-import org.geeklub.hvmediaplayer.utils.TimeUtil;
-import org.geeklub.hvmediaplayer.widgets.controller.HVMediaController;
-import org.geeklub.hvmediaplayer.widgets.playable_components.factory.HVAudioView;
-import org.geeklub.hvmediaplayer.widgets.playable_components.factory.HVVideoView;
-import org.geeklub.hvmediaplayer.widgets.playable_components.IHVPlayable;
-import org.geeklub.hvmediaplayer.widgets.playable_components.factory.HVMediaPlayerFactory;
-import org.geeklub.hvmediaplayer.widgets.player_states.HVMediaPlayerContext;
-import org.geeklub.hvmediaplayer.widgets.player_states.concrete_state.PreparingState;
+import org.geeklub.hvmediaplayer.widgets.factory.HVAudioController;
+import org.geeklub.hvmediaplayer.widgets.factory.HVAudioPlayerFactory;
+import org.geeklub.hvmediaplayer.widgets.factory.HVAudioView;
+import org.geeklub.hvmediaplayer.widgets.factory.HVController;
+import org.geeklub.hvmediaplayer.widgets.factory.HVPlayable;
+import org.geeklub.hvmediaplayer.widgets.factory.HVVideoController;
+import org.geeklub.hvmediaplayer.widgets.factory.HVVideoPlayerFactory;
+import org.geeklub.hvmediaplayer.widgets.factory.HVVideoView;
+import org.geeklub.hvmediaplayer.widgets.states.HVMediaPlayerContext;
 
 /**
  * Created by HelloVass on 16/3/24.
@@ -28,17 +29,17 @@ public class HVMediaPlayer extends RelativeLayout {
 
   private static final String TAG = HVMediaPlayer.class.getSimpleName();
 
-  private IHVPlayable mIHVPlayable; // 可播放的组件
+  private HVPlayable mHVPlayable; // 可播放组件
 
-  private HVMediaController mHVMediaController; // 操作栏
-
-  private HVMediaPlayerCallback mHVMediaPlayerCallback;
+  private HVController mHVController; // 操作栏
 
   private HVMediaPlayerContext mHVMediaPlayerContext;
 
+  private Callback mCallback;
+
   private boolean mIsMediaControllerHidden = false; // 默认隐藏“操作栏”
 
-  private int mPlayerStopPosition = 0;
+  private int mPlayerStopPosition = 0; // 记录停止播放的位置
 
   public HVMediaPlayer(Context context) {
     this(context, null);
@@ -53,212 +54,283 @@ public class HVMediaPlayer extends RelativeLayout {
     init();
   }
 
-  public void setHVMediaPlayerCallback(HVMediaPlayerCallback callback) {
-    mHVMediaPlayerCallback = callback;
+  public void setCallback(Callback callback) {
+    mCallback = callback;
   }
 
-  /**
-   * 创建视频播放器
-   *
-   * @param mediaUrl 媒体的地址
-   */
-  public void buildVideoPlayer(String mediaUrl) {
+  public void onPause() {
+    mPlayerStopPosition = mHVPlayable.getHVPlayableCurrentPosition();
+    mHVMediaPlayerContext.setPlayerState(mHVMediaPlayerContext.getPausedState());
+    mHVMediaPlayerContext.pause();
+  }
 
-    removeAllViews();
-
-    HVVideoView videoView = HVMediaPlayerFactory.createHVVideoView(getContext(), mediaUrl);
-    addPlayableView(videoView);
-    mIHVPlayable = videoView;
-
-    addControllerView();
-
-    setUpCallbacks();
-    setUpMediaPlayerState();
+  public void onResume() {
+    mHVPlayable.seekToHVPlayable(mPlayerStopPosition);
   }
 
   /**
    * 创建音乐播放器
    *
-   * @param mediaUrl 媒体的地址
+   * @param audioUrl 媒体的地址
    * @param coverImageLoader 将显示封面的回调接口
    */
-  public void buildAudioPlayer(String mediaUrl, String coverUrl,
+  public void buildAudioPlayer(String audioUrl, String coverUrl,
       HVAudioView.CoverImageLoader coverImageLoader) {
 
     removeAllViews();
 
-    HVAudioView audioView =
-        HVMediaPlayerFactory.createHVAudioView(getContext(), mediaUrl, coverUrl, coverImageLoader);
+    HVAudioPlayerFactory audioPlayerFactory = new HVAudioPlayerFactory(getContext());
 
-    addPlayableView(audioView);
-    mIHVPlayable = audioView;
+    final HVAudioView audioView = (HVAudioView) audioPlayerFactory.createPlayable();
+    audioView.setAudioURI(Uri.parse(audioUrl));
+    audioView.setCoverUrl(coverUrl);
+    audioView.setCoverImageLoader(coverImageLoader);
+    addPlayable(audioView);
 
-    addControllerView();
+    final HVAudioController audioController =
+        (HVAudioController) audioPlayerFactory.createController();
+    addController(audioController);
 
-    setUpCallbacks();
-    setUpMediaPlayerState();
+    audioView.setOnTouchListener(new OnTouchListener() {
+      @Override public boolean onTouch(View v, MotionEvent event) {
+
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+          hideOrShowMediaController(audioController);
+        }
+        return false;
+      }
+    });
+
+    audioView.setCallback(new HVPlayable.Callback() {
+
+      @Override public void onPrepared() {
+        mHVMediaPlayerContext.onPrepared();
+      }
+
+      @Override public void onProgressChanged(int percent, int secondaryProgress) {
+
+        if (!audioController.isDraggingSeekBar()) {
+          audioController.setSeekBarProgress(percent);
+          audioController.setSeekBarSecondaryProgress(secondaryProgress);
+          audioController.setCurrentTime(audioView.getHVPlayableCurrentPosition());
+        }
+      }
+
+      @Override public void onCompletion(MediaPlayer mediaPlayer) {
+
+        audioController.setCurrentTime(0);
+        audioController.setSeekBarProgress(0);
+
+        audioController.hidePauseButton();
+        audioController.showPlayButton();
+
+        audioView.seekToHVPlayable(0);
+        audioView.stopPlayableTimer();
+      }
+
+      @Override public void onError(MediaPlayer mediaPlayer) {
+
+      }
+    });
+
+    audioController.setCallback(new HVAudioController.Callback() {
+
+      @Override public void start() {
+
+        if (!audioView.isHVPlayablePlaying()) {
+          mHVMediaPlayerContext.start();
+        }
+      }
+
+      @Override public void pause() {
+
+        if (audioView.isHVPlayablePlaying()) {
+          mHVMediaPlayerContext.pause();
+        }
+      }
+
+      @Override public void updateCurrentTimeWhenDragging(int progress) {
+
+        float percent = (float) progress / (float) 100;
+        int timeInMillis = (int) (percent * audioView.getHVPlayableDuration());
+        audioController.setCurrentTime(timeInMillis);
+      }
+
+      @Override public void onProgressChanged(int progress) {
+
+        float percent = (float) progress / (float) 100;
+        int timeInMillis = (int) (percent * audioView.getHVPlayableDuration());
+        audioView.seekToHVPlayable(timeInMillis);
+      }
+    });
+
+    prepareAsync();
   }
 
-  public void onPause() {
-    mPlayerStopPosition = mIHVPlayable.getIHVPlayableCurrentPosition();
-    mHVMediaPlayerContext.pause();
-  }
+  /**
+   * 创建视频播放器
+   *
+   * @param videoUrl 媒体的地址
+   */
+  public void buildVideoPlayer(String videoUrl) {
 
-  public void onResume() {
-    mIHVPlayable.IHVPlayableSeekTo(mPlayerStopPosition);
+    removeAllViews();
+
+    HVVideoPlayerFactory videoPlayerFactory = new HVVideoPlayerFactory(getContext());
+
+    final HVVideoView videoView = (HVVideoView) videoPlayerFactory.createPlayable();
+    videoView.setVideoURI(Uri.parse(videoUrl));
+    addPlayable(videoView);
+
+    final HVVideoController videoController =
+        (HVVideoController) videoPlayerFactory.createController();
+    addController(videoController);
+
+    videoView.setOnTouchListener(new OnTouchListener() {
+      @Override public boolean onTouch(View v, MotionEvent event) {
+
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+          hideOrShowMediaController(videoController);
+        }
+        return false;
+      }
+    });
+
+    videoView.setCallback(new HVPlayable.Callback() {
+
+      @Override public void onPrepared() {
+        mHVMediaPlayerContext.onPrepared();
+      }
+
+      @Override public void onProgressChanged(int percent, int secondaryProgress) {
+
+        if (!videoController.isDraggingSeekBar()) {
+          videoController.setSeekBarProgress(percent);
+          videoController.setSeekBarSecondaryProgress(secondaryProgress);
+          videoController.setCurrentTime(videoView.getHVPlayableCurrentPosition());
+        }
+      }
+
+      @Override public void onCompletion(MediaPlayer mediaPlayer) {
+        videoController.setCurrentTime(0);
+        videoController.setSeekBarProgress(0);
+
+        videoController.hidePauseButton();
+        videoController.showPlayButton();
+
+        videoView.seekToHVPlayable(0);
+        videoView.stopPlayableTimer();
+      }
+
+      @Override public void onError(MediaPlayer mediaPlayer) {
+
+      }
+    });
+
+    videoController.setCallback(new HVVideoController.Callback() {
+
+      @Override public void start() {
+        if (!videoView.isHVPlayablePlaying()) {
+          mHVMediaPlayerContext.start();
+        }
+      }
+
+      @Override public void pause() {
+        if (videoView.isHVPlayablePlaying()) {
+          mHVMediaPlayerContext.pause();
+        }
+      }
+
+      @Override public void shrink() {
+        if (mCallback != null && videoController.isEnterFullScreen()) {
+          mCallback.onExitScreen();
+          videoController.setIsEnterFullScreen(false);
+        }
+      }
+
+      @Override public void expand() {
+        if (mCallback != null && !videoController.isEnterFullScreen()) {
+          mCallback.onEnterFullScreen();
+          videoController.setIsEnterFullScreen(true);
+        }
+      }
+
+      @Override public void updateCurrentTimeWhenDragging(int progress) {
+        float percent = (float) progress / (float) 100;
+        int timeInMillis = (int) (percent * videoView.getHVPlayableDuration());
+        videoController.setCurrentTime(timeInMillis);
+      }
+
+      @Override public void onProgressChanged(int progress) {
+        float percent = (float) progress / (float) 100;
+        int timeInMillis = (int) (percent * videoView.getHVPlayableDuration());
+        videoView.seekToHVPlayable(timeInMillis);
+      }
+    });
+
+    prepareAsync();
   }
 
   private void init() {
     setBackgroundColor(Color.BLACK); // 设置播放器背景为“纯黑”
   }
 
-  private void addPlayableView(View component) {
+  private void prepareAsync() {
+    mHVMediaPlayerContext = new HVMediaPlayerContext(mHVPlayable, mHVController);
+    mHVMediaPlayerContext.setPlayerState(mHVMediaPlayerContext.getPreparingState());
+    mHVMediaPlayerContext.prepareAsync();
+  }
+
+  private void addPlayable(View playable) {
+
     LayoutParams videoViewLayoutParams =
         new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
     videoViewLayoutParams.addRule(CENTER_IN_PARENT);
     videoViewLayoutParams.leftMargin = DensityUtil.dip2px(getContext(), 8);
     videoViewLayoutParams.rightMargin = DensityUtil.dip2px(getContext(), 8);
-    component.setLayoutParams(videoViewLayoutParams);
-    addView(component); // 将“可播放的组件”添加到“HVMediaPlayer”中
+    playable.setLayoutParams(videoViewLayoutParams);
+    addView(playable);
+
+    mHVPlayable = (HVPlayable) playable;
   }
 
-  private void addControllerView() {
-    HVMediaController controller = new HVMediaController(getContext());
+  private void addController(View controller) {
 
     LayoutParams controllerLayoutParams =
         new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, DensityUtil.dip2px(getContext(), 40));
     controllerLayoutParams.addRule(ALIGN_PARENT_BOTTOM);
     controller.setLayoutParams(controllerLayoutParams);
-    addView(controller); // 将“操作栏”添加到“HVMediaPlayer”中
+    addView(controller);
 
-    mHVMediaController = controller;
-  }
-
-  private void setUpMediaPlayerState() {
-    mHVMediaPlayerContext = new HVMediaPlayerContext(mIHVPlayable, mHVMediaController);
-    mHVMediaPlayerContext.setPlayerState(new PreparingState(mIHVPlayable, mHVMediaController));
-    mHVMediaPlayerContext.prepareAsync();
-  }
-
-  /**
-   * 设置需要监听的事件
-   */
-  private void setUpCallbacks() {
-
-    mIHVPlayable.setIHVPlayableOnTouchListener(new OnTouchListener() { // 设置“可播放组件”touch事件
-
-      @Override public boolean onTouch(View v, MotionEvent event) {
-
-        if (event.getAction() == MotionEvent.ACTION_DOWN) {
-          hideOrShowMediaController();
-        }
-
-        return false;
-      }
-    });
-
-    mIHVPlayable.setIHVPlayableCallback(new IHVPlayable.IHVPlayableCallback() { // 设置“可播放组件”内部回调
-
-      @Override public void onProgressChanged(int progress, int secondaryProgress) {
-
-        Log.i(TAG, "onProgressChanged -->>>" + TimeUtil.getTime(
-            mIHVPlayable.getIHVPlayableCurrentPosition()));
-
-        if (!mHVMediaController.isDraggingSeekBar()) { // 如果用户没有拖动“SeeKBar”
-          mHVMediaController.setSeekBarProgress(progress);
-          mHVMediaController.setSeekBarSecondaryProgress(secondaryProgress);
-          mHVMediaController.setCurrentTime(mIHVPlayable.getIHVPlayableCurrentPosition());
-        }
-      }
-
-      @Override public void onPrepared() {
-        mHVMediaPlayerContext.onPrepared();
-      }
-
-      @Override public void onCompletion(MediaPlayer mediaPlayer) {
-
-        mHVMediaController.setCurrentTime(0);
-        mHVMediaController.setSeekBarProgress(0);
-
-        mHVMediaController.showOrHidePauseButton(false);
-        mHVMediaController.showOrHidePlayButton(true);
-
-        mIHVPlayable.IHVPlayableSeekTo(0);
-        mIHVPlayable.stopUpdatePlayableTimer();
-      }
-
-      @Override public void onError(MediaPlayer mediaPlayer) {
-        Log.i(TAG, "onError");
-      }
-    });
-
-    mHVMediaController.setHVMediaControllerCallback(
-        new HVMediaController.HVMediaControllerCallback() {
-
-          @Override public void onProgressChanged(int progress) {
-            float percent = (float) progress / (float) 100;
-            int timeInMillis = (int) (percent * mIHVPlayable.getIHVPlayableDuration());
-            mIHVPlayable.IHVPlayableSeekTo(timeInMillis);
-          }
-
-          @Override public void start() {
-            if (!mIHVPlayable.isIHVPlayablePlaying()) {
-              mHVMediaPlayerContext.start();
-            }
-          }
-
-          @Override public void pause() {
-            if (mIHVPlayable.isIHVPlayablePlaying()) {
-              mHVMediaPlayerContext.pause();
-            }
-          }
-
-          @Override public void shrink() {
-            if (mHVMediaPlayerCallback != null && mHVMediaController.isEnterFullScreen()) {
-              mHVMediaPlayerCallback.onExitScreen();
-              mHVMediaController.setIsEnterFullScreen(false);
-            }
-          }
-
-          @Override public void expand() {
-            if (mHVMediaPlayerCallback != null && !mHVMediaController.isEnterFullScreen()) {
-              mHVMediaPlayerCallback.onEnterFullScreen();
-              mHVMediaController.setIsEnterFullScreen(true);
-            }
-          }
-
-          @Override public void updateCurrentTimeWhenDragging(int progress) {
-            float percent = (float) progress / (float) 100;
-            int timeInMillis = (int) (percent * mIHVPlayable.getIHVPlayableDuration());
-            mHVMediaController.setCurrentTime(timeInMillis);
-          }
-        });
+    mHVController = (HVController) controller;
   }
 
   /**
    * 控制“操作栏”的隐藏和显示
    */
-  private void hideOrShowMediaController() {
+  private void hideOrShowMediaController(View controller) {
+
     if (mIsMediaControllerHidden) {
-      mHVMediaController.animate()
-          .translationY(0)
+      controller.animate()
+          .translationY(0L)
           .setInterpolator(new DecelerateInterpolator(2.0F))
-          .setDuration(500)
+          .setDuration(500L)
           .start();
     } else {
-      mHVMediaController.animate()
-          .translationY(mHVMediaController.getHeight())
+      controller.animate()
+          .translationY(controller.getHeight())
           .setInterpolator(new AccelerateInterpolator(2.0F))
-          .setDuration(500)
+          .setDuration(500L)
           .start();
     }
+
     mIsMediaControllerHidden = !mIsMediaControllerHidden;
   }
 
   /**
    * HVMediaPlayer 的回调接口
    */
-  public interface HVMediaPlayerCallback {
+  public interface Callback {
 
     /**
      * 进入全屏

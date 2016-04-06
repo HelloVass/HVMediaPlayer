@@ -32,7 +32,7 @@ public class VideoActivity extends AppCompatActivity {
 
     mHVMediaPlayer.buildVideoPlayer(TEST_VIDEO_URL);
 
-    mHVMediaPlayer.setHVMediaPlayerCallback(new HVMediaPlayer.HVMediaPlayerCallback() {
+    mHVMediaPlayer.setCallback(new HVMediaPlayer.Callback() {
       @Override public void onEnterFullScreen() {
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         ViewGroup.LayoutParams layoutParams = mHVMediaPlayer.getLayoutParams();

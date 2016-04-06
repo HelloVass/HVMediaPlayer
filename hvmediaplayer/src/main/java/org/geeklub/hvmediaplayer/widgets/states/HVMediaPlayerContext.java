@@ -1,11 +1,7 @@
-package org.geeklub.hvmediaplayer.widgets.player_states;
+package org.geeklub.hvmediaplayer.widgets.states;
 
-import org.geeklub.hvmediaplayer.widgets.controller.HVMediaController;
-import org.geeklub.hvmediaplayer.widgets.playable_components.IHVPlayable;
-import org.geeklub.hvmediaplayer.widgets.player_states.concrete_state.PausedState;
-import org.geeklub.hvmediaplayer.widgets.player_states.concrete_state.PreparedState;
-import org.geeklub.hvmediaplayer.widgets.player_states.concrete_state.PreparingState;
-import org.geeklub.hvmediaplayer.widgets.player_states.concrete_state.StartedState;
+import org.geeklub.hvmediaplayer.widgets.factory.HVController;
+import org.geeklub.hvmediaplayer.widgets.factory.HVPlayable;
 
 /**
  * Created by HelloVass on 16/3/30.
@@ -24,11 +20,16 @@ public class HVMediaPlayerContext {
 
   private AbsMediaPlayerState mPlayerState;
 
-  public HVMediaPlayerContext(IHVPlayable playable, HVMediaController controller) {
+  public HVMediaPlayerContext(HVPlayable playable, HVController controller) {
     mPreparingState = new PreparingState(playable, controller);
     mPreparedState = new PreparedState(playable, controller);
     mStartedState = new StartedState(playable, controller);
     mPausedState = new PausedState(playable, controller);
+  }
+
+  public void setPlayerState(AbsMediaPlayerState playerState) {
+    mPlayerState = playerState;
+    mPlayerState.setHVMediaPlayerContext(this);
   }
 
   public PreparedState getPreparedState() {
@@ -45,11 +46,6 @@ public class HVMediaPlayerContext {
 
   public PausedState getPausedState() {
     return mPausedState;
-  }
-
-  public void setPlayerState(AbsMediaPlayerState playerState) {
-    mPlayerState = playerState;
-    mPlayerState.setHVMediaPlayerContext(this);
   }
 
   public void prepareAsync() {

@@ -1,72 +1,66 @@
-package org.geeklub.hvmediaplayer.widgets.playable_components.factory;
+package org.geeklub.hvmediaplayer.widgets.factory;
 
 import android.content.Context;
 import android.media.MediaPlayer;
 import android.os.CountDownTimer;
 import android.widget.VideoView;
-import org.geeklub.hvmediaplayer.widgets.playable_components.IHVPlayable;
 
 /**
  * Created by HelloVass on 16/3/24.
  */
-public class HVVideoView extends VideoView implements IHVPlayable {
+public class HVVideoView extends VideoView implements HVPlayable {
 
   private static final String TAG = HVVideoView.class.getSimpleName();
 
   private UpdatePlayableTimer mUpdatePlayableTimer;
 
-  private IHVPlayableCallback mIHVPlayableCallback;
-
+  private Callback mCallback;
 
   public HVVideoView(Context context) {
     super(context);
     init();
   }
 
-  @Override public void resetUpdatePlayableTimer() {
-    mUpdatePlayableTimer = new UpdatePlayableTimer(getDuration(), 250);
+  @Override public void resetPlayableTimer() {
+    mUpdatePlayableTimer = new UpdatePlayableTimer(getDuration(), 250L);
     mUpdatePlayableTimer.start();
   }
 
-  @Override public void stopUpdatePlayableTimer() {
+  @Override public void stopPlayableTimer() {
     mUpdatePlayableTimer.cancel();
     mUpdatePlayableTimer = null;
   }
 
-  @Override public void pauseIHVPlayable() {
+  @Override public void pauseHVPlayable() {
     pause();
   }
 
-  @Override public void startIHVPlayable() {
+  @Override public void startHVPlayable() {
     start();
   }
 
-  @Override public boolean isIHVPlayablePlaying() {
+  @Override public boolean isHVPlayablePlaying() {
     return isPlaying();
   }
 
-  @Override public int getIHVPlayableBufferPercentage() {
+  @Override public int getHVPlayableBufferPercentage() {
     return getBufferPercentage();
   }
 
-  @Override public int getIHVPlayableCurrentPosition() {
+  @Override public int getHVPlayableCurrentPosition() {
     return getCurrentPosition();
   }
 
-  @Override public int getIHVPlayableDuration() {
+  @Override public int getHVPlayableDuration() {
     return getDuration();
   }
 
-  @Override public void IHVPlayableSeekTo(int timeInMillis) {
+  @Override public void seekToHVPlayable(int timeInMillis) {
     seekTo(timeInMillis);
   }
 
-  @Override public void setIHVPlayableOnTouchListener(OnTouchListener onTouchListener) {
-    setOnTouchListener(onTouchListener);
-  }
-
-  @Override public void setIHVPlayableCallback(IHVPlayableCallback callback) {
-    mIHVPlayableCallback = callback;
+  @Override public void setCallback(Callback callback) {
+    mCallback = callback;
   }
 
   private void init() {
@@ -74,24 +68,24 @@ public class HVVideoView extends VideoView implements IHVPlayable {
     setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
 
       @Override public void onPrepared(MediaPlayer mp) {
-        if (mIHVPlayableCallback != null) {
-          mIHVPlayableCallback.onPrepared();
+        if (mCallback != null) {
+          mCallback.onPrepared();
         }
       }
     });
 
     setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
       @Override public void onCompletion(MediaPlayer mp) {
-        if (mIHVPlayableCallback != null) {
-          mIHVPlayableCallback.onCompletion(mp);
+        if (mCallback != null) {
+          mCallback.onCompletion(mp);
         }
       }
     });
 
     setOnErrorListener(new MediaPlayer.OnErrorListener() {
       @Override public boolean onError(MediaPlayer mp, int what, int extra) {
-        if (mIHVPlayableCallback != null) {
-          mIHVPlayableCallback.onError(mp);
+        if (mCallback != null) {
+          mCallback.onError(mp);
           return true;
         }
         return false;
@@ -99,9 +93,6 @@ public class HVVideoView extends VideoView implements IHVPlayable {
     });
   }
 
-  /**
-   * 定时更新“可播放组件”播放进度任务
-   */
   private class UpdatePlayableTimer extends CountDownTimer {
 
     public UpdatePlayableTimer(long millisInFuture, long countDownInterval) {
@@ -110,9 +101,9 @@ public class HVVideoView extends VideoView implements IHVPlayable {
 
     @Override public void onTick(long millisUntilFinished) {
 
-      if (mIHVPlayableCallback != null && isIHVPlayablePlaying()) {
+      if (mCallback != null && isHVPlayablePlaying()) {
         float percent = (float) getCurrentPosition() / (float) getDuration();
-        mIHVPlayableCallback.onProgressChanged((int) (percent * 100), getBufferPercentage());
+        mCallback.onProgressChanged((int) (percent * 100), getBufferPercentage());
       }
     }
 

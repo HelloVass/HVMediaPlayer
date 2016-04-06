@@ -1,7 +1,7 @@
-package org.geeklub.hvmediaplayer.widgets.player_states;
+package org.geeklub.hvmediaplayer.widgets.states;
 
-import org.geeklub.hvmediaplayer.widgets.controller.HVMediaController;
-import org.geeklub.hvmediaplayer.widgets.playable_components.IHVPlayable;
+import org.geeklub.hvmediaplayer.widgets.factory.HVController;
+import org.geeklub.hvmediaplayer.widgets.factory.HVPlayable;
 
 /**
  * Created by HelloVass on 16/3/30.
@@ -12,11 +12,11 @@ public abstract class AbsMediaPlayerState {
 
   protected HVMediaPlayerContext mHVMediaPlayerContext;
 
-  protected IHVPlayable mPlayable;
+  protected HVPlayable mPlayable;
 
-  protected HVMediaController mController;
+  protected HVController mController;
 
-  public AbsMediaPlayerState(IHVPlayable playable, HVMediaController controller) {
+  public AbsMediaPlayerState(HVPlayable playable, HVController controller) {
     mPlayable = playable;
     mController = controller;
   }

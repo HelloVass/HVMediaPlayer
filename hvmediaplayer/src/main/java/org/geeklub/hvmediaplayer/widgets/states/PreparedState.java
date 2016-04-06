@@ -1,9 +1,7 @@
-package org.geeklub.hvmediaplayer.widgets.player_states.concrete_state;
+package org.geeklub.hvmediaplayer.widgets.states;
 
-import android.view.View;
-import org.geeklub.hvmediaplayer.widgets.controller.HVMediaController;
-import org.geeklub.hvmediaplayer.widgets.playable_components.IHVPlayable;
-import org.geeklub.hvmediaplayer.widgets.player_states.AbsMediaPlayerState;
+import org.geeklub.hvmediaplayer.widgets.factory.HVController;
+import org.geeklub.hvmediaplayer.widgets.factory.HVPlayable;
 
 /**
  * Created by HelloVass on 16/3/30.
@@ -12,7 +10,7 @@ import org.geeklub.hvmediaplayer.widgets.player_states.AbsMediaPlayerState;
  */
 public class PreparedState extends AbsMediaPlayerState {
 
-  public PreparedState(IHVPlayable playable, HVMediaController controller) {
+  public PreparedState(HVPlayable playable, HVController controller) {
     super(playable, controller);
   }
 
@@ -22,10 +20,10 @@ public class PreparedState extends AbsMediaPlayerState {
 
   @Override protected void onPrepared() {
 
-    mController.setVisibility(View.VISIBLE); // 显示出操作栏
+    mController.show();
 
     mController.setCurrentTime(0);
-    mController.setEndTime(mPlayable.getIHVPlayableDuration());
+    mController.setEndTime(mPlayable.getHVPlayableDuration());
 
     mController.setSeekBarProgress(0);
     mController.setSeekBarSecondaryProgress(0);

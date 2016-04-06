@@ -8,7 +8,7 @@ import android.widget.ImageView;
 import com.bumptech.glide.Glide;
 import org.geeklub.hvmediaplayer.utils.DensityUtil;
 import org.geeklub.hvmediaplayer.widgets.HVMediaPlayer;
-import org.geeklub.hvmediaplayer.widgets.playable_components.factory.HVAudioView;
+import org.geeklub.hvmediaplayer.widgets.factory.HVAudioView;
 
 /**
  * Created by HelloVass on 16/3/29.
@@ -45,7 +45,7 @@ public class AudioActivity extends AppCompatActivity {
           }
         });
 
-    mHVMediaPlayer.setHVMediaPlayerCallback(new HVMediaPlayer.HVMediaPlayerCallback() {
+    mHVMediaPlayer.setCallback(new HVMediaPlayer.Callback() {
       @Override public void onEnterFullScreen() {
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         ViewGroup.LayoutParams layoutParams = mHVMediaPlayer.getLayoutParams();

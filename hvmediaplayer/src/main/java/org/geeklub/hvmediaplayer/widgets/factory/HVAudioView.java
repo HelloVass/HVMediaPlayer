@@ -1,4 +1,4 @@
-package org.geeklub.hvmediaplayer.widgets.playable_components.factory;
+package org.geeklub.hvmediaplayer.widgets.factory;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -12,18 +12,17 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import java.io.IOException;
 import java.util.Map;
-import org.geeklub.hvmediaplayer.widgets.playable_components.IHVPlayable;
 
 /**
  * Created by HelloVass on 16/3/27.
  */
-public class HVAudioView extends RelativeLayout implements IHVPlayable {
+public class HVAudioView extends RelativeLayout implements HVPlayable {
 
   private ImageView mCoverImageView;
 
   private MediaPlayer mMediaPlayer;
 
-  private IHVPlayableCallback mIHVPlayableCallback;
+  private Callback mCallback;
 
   private CoverImageLoader mCoverImageLoader;
 
@@ -92,6 +91,10 @@ public class HVAudioView extends RelativeLayout implements IHVPlayable {
     loadCoverImage();
   }
 
+  @Override public void setCallback(Callback callback) {
+    mCallback = callback;
+  }
+
   public void setOnPreparedListener(MediaPlayer.OnPreparedListener onPreparedListener) {
     mOnPreparedListener = onPreparedListener;
   }
@@ -104,43 +107,35 @@ public class HVAudioView extends RelativeLayout implements IHVPlayable {
     mOnErrorListener = onErrorListener;
   }
 
-  @Override public int getIHVPlayableCurrentPosition() {
+  @Override public int getHVPlayableCurrentPosition() {
     if (isInPlaybackState()) {
       return mMediaPlayer.getCurrentPosition();
     }
     return 0;
   }
 
-  @Override public int getIHVPlayableDuration() {
+  @Override public int getHVPlayableDuration() {
     if (isInPlaybackState()) {
       return mMediaPlayer.getDuration();
     }
     return -1;
   }
 
-  @Override public boolean isIHVPlayablePlaying() {
+  @Override public boolean isHVPlayablePlaying() {
     return isInPlaybackState() && mMediaPlayer.isPlaying();
   }
 
-  @Override public int getIHVPlayableBufferPercentage() {
+  @Override public int getHVPlayableBufferPercentage() {
     return getBufferPercentage();
   }
 
-  @Override public void IHVPlayableSeekTo(int timeInMillis) {
+  @Override public void seekToHVPlayable(int timeInMillis) {
     if (isInPlaybackState()) {
       mMediaPlayer.seekTo(timeInMillis);
       mSeekWhenPrepared = 0;
     } else {
       mSeekWhenPrepared = timeInMillis;
     }
-  }
-
-  @Override public void setIHVPlayableOnTouchListener(OnTouchListener onTouchListener) {
-    setOnTouchListener(onTouchListener);
-  }
-
-  @Override public void setIHVPlayableCallback(IHVPlayableCallback callback) {
-    mIHVPlayableCallback = callback;
   }
 
   public void stopPlayback() {
@@ -153,17 +148,17 @@ public class HVAudioView extends RelativeLayout implements IHVPlayable {
     }
   }
 
-  @Override public void resetUpdatePlayableTimer() {
-    mUpdatePlayableTimer = new UpdatePlayableTimer(getIHVPlayableDuration(), 250);
+  @Override public void resetPlayableTimer() {
+    mUpdatePlayableTimer = new UpdatePlayableTimer(getHVPlayableDuration(), 250L);
     mUpdatePlayableTimer.start();
   }
 
-  @Override public void stopUpdatePlayableTimer() {
+  @Override public void stopPlayableTimer() {
     mUpdatePlayableTimer.cancel();
     mUpdatePlayableTimer = null;
   }
 
-  @Override public void pauseIHVPlayable() {
+  @Override public void pauseHVPlayable() {
     if (isInPlaybackState()) {
       if (mMediaPlayer.isPlaying()) {
         mMediaPlayer.pause();
@@ -173,7 +168,7 @@ public class HVAudioView extends RelativeLayout implements IHVPlayable {
     mTargetState = STATE_PAUSED;
   }
 
-  @Override public void startIHVPlayable() {
+  @Override public void startHVPlayable() {
     if (isInPlaybackState()) {
       mMediaPlayer.start();
       mCurrentState = STATE_PLAYING;
@@ -209,24 +204,24 @@ public class HVAudioView extends RelativeLayout implements IHVPlayable {
 
     setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
       @Override public void onPrepared(MediaPlayer mp) {
-        if (mIHVPlayableCallback != null) {
-          mIHVPlayableCallback.onPrepared();
+        if (mCallback != null) {
+          mCallback.onPrepared();
         }
       }
     });
 
     setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
       @Override public void onCompletion(MediaPlayer mp) {
-        if (mIHVPlayableCallback != null) {
-          mIHVPlayableCallback.onCompletion(mp);
+        if (mCallback != null) {
+          mCallback.onCompletion(mp);
         }
       }
     });
 
     setOnErrorListener(new MediaPlayer.OnErrorListener() {
       @Override public boolean onError(MediaPlayer mp, int what, int extra) {
-        if (mIHVPlayableCallback != null) {
-          mIHVPlayableCallback.onError(mp);
+        if (mCallback != null) {
+          mCallback.onError(mp);
           return true;
         }
         return false;
@@ -319,11 +314,11 @@ public class HVAudioView extends RelativeLayout implements IHVPlayable {
       int seekToPosition = mSeekWhenPrepared;
 
       if (seekToPosition != 0) {
-        IHVPlayableSeekTo(seekToPosition);
+        seekToHVPlayable(seekToPosition);
       }
 
       if (mTargetState == STATE_PLAYING) {
-        startIHVPlayable();
+        startHVPlayable();
       }
     }
   }
@@ -392,9 +387,6 @@ public class HVAudioView extends RelativeLayout implements IHVPlayable {
     void loadCoverImage(ImageView coverImageView, String coverUrl);
   }
 
-  /**
-   * 定时更新“可播放组件”播放进度任务
-   */
   private class UpdatePlayableTimer extends CountDownTimer {
 
     public UpdatePlayableTimer(long millisInFuture, long countDownInterval) {
@@ -403,10 +395,9 @@ public class HVAudioView extends RelativeLayout implements IHVPlayable {
 
     @Override public void onTick(long millisUntilFinished) {
 
-      if (mIHVPlayableCallback != null && isIHVPlayablePlaying()) {
-        float percent = (float) getIHVPlayableCurrentPosition() / (float) getIHVPlayableDuration();
-        mIHVPlayableCallback.onProgressChanged((int) (percent * 100),
-            getIHVPlayableBufferPercentage());
+      if (mCallback != null && isHVPlayablePlaying()) {
+        float percent = (float) getHVPlayableCurrentPosition() / (float) getHVPlayableDuration();
+        mCallback.onProgressChanged((int) (percent * 100), getHVPlayableBufferPercentage());
       }
     }
 

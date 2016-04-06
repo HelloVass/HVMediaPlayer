@@ -71,32 +71,4 @@
     android:textSize="12sp"
     tools:text="3:20" />
 
-  <FrameLayout
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_gravity="center_vertical">
-
-
-    <ImageView
-      android:id="@+id/iv_shrink"
-      android:layout_width="36dp"
-      android:layout_height="36dp"
-      android:clickable="true"
-      android:contentDescription="@null"
-      android:scaleType="centerCrop"
-      android:src="@mipmap/ic_fullscreen_exit_white_24dp"
-      android:visibility="gone" />
-
-    <ImageView
-      android:id="@+id/iv_expand"
-      android:layout_width="36dp"
-      android:layout_height="36dp"
-      android:clickable="true"
-      android:contentDescription="@null"
-      android:scaleType="centerCrop"
-      android:src="@mipmap/ic_fullscreen_white_24dp" />
-
-  </FrameLayout>
-
-
 </LinearLayout>
