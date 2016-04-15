@@ -1,5 +1,6 @@
 package org.geeklub.hvmedia;
 
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -20,6 +21,8 @@ public class VideoActivity extends AppCompatActivity {
 
   private View mOpenVideoPlayerButton;
 
+  private HVVideoPlayer mVideoPlayer;
+
   @Override protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
@@ -34,16 +37,29 @@ public class VideoActivity extends AppCompatActivity {
     });
   }
 
+  @Override public void onConfigurationChanged(Configuration newConfig) {
+    super.onConfigurationChanged(newConfig);
+
+    if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+      mVideoPlayer.getLayoutParams().height = ViewGroup.LayoutParams.MATCH_PARENT;
+      mVideoPlayer.getLayoutParams().width = ViewGroup.LayoutParams.MATCH_PARENT;
+    } else if (getResources().getConfiguration().orientation
+        == Configuration.ORIENTATION_PORTRAIT) {
+      mVideoPlayer.getLayoutParams().height = DensityUtil.dip2px(this, 220);
+      mVideoPlayer.getLayoutParams().width = ViewGroup.LayoutParams.MATCH_PARENT;
+    }
+  }
+
   private void addVideoPlayerToContentView() {
 
     FrameLayout container =
         (FrameLayout) getWindow().getDecorView().findViewById(android.R.id.content);
 
-    HVVideoPlayer videoPlayer = new HVVideoPlayer.Builder(this).setVideoUrl(TEST_VIDEO_URL)
-        .setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+    mVideoPlayer = new HVVideoPlayer.Builder(this).setVideoUrl(TEST_VIDEO_URL)
+        .setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
             DensityUtil.dip2px(this, 220)))
         .build();
 
-    container.addView(videoPlayer);
+    container.addView(mVideoPlayer);
   }
 }

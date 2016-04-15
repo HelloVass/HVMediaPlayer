@@ -110,9 +110,9 @@ public class HVAudioPlayer extends RelativeLayout implements Mediator {
   @Override public void updateCurrentTimeWhenPlaying(int progress, int bufferPercentage) {
 
     if (!mHVAudioController.isDraggingSeekBar()) {
-      float percent = (float) progress / (float) 100;
-      int timeInMillis = (int) (percent * mHVAudioView.getDuration());
-      mHVAudioView.seekTo(timeInMillis);
+      mHVAudioController.setSeekBarProgress(progress);
+      mHVAudioController.setSeekBarSecondaryProgress(bufferPercentage);
+      mHVAudioController.setCurrentTime(mHVAudioView.getCurrentPosition());
     }
   }
 
@@ -129,9 +129,10 @@ public class HVAudioPlayer extends RelativeLayout implements Mediator {
 
     mHVAudioController.setCurrentTime(0);
     mHVAudioController.setSeekBarProgress(0);
+    mHVAudioController.setSeekBarSecondaryProgress(0);
     mHVAudioController.displayPlayImg();
-    mHVAudioController.pause();
 
+    mHVAudioView.stopTimer();
     mHVAudioView.seekTo(0);
   }
 
@@ -143,8 +144,8 @@ public class HVAudioPlayer extends RelativeLayout implements Mediator {
     LayoutParams videoViewLayoutParams =
         new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
     videoViewLayoutParams.addRule(CENTER_IN_PARENT);
-    videoViewLayoutParams.leftMargin = DensityUtil.dip2px(getContext(), 16);
-    videoViewLayoutParams.rightMargin = DensityUtil.dip2px(getContext(), 16);
+    videoViewLayoutParams.leftMargin = DensityUtil.dip2px(getContext(), 8);
+    videoViewLayoutParams.rightMargin = DensityUtil.dip2px(getContext(), 8);
     mHVAudioView.setLayoutParams(videoViewLayoutParams);
     addView(mHVAudioView);
   }

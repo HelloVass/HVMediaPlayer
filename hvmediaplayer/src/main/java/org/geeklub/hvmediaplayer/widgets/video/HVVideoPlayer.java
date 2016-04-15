@@ -73,8 +73,8 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator {
     // 构造命令
     Command startCommand = new StartCommand(mHVVideoView);
     Command pauseCommand = new PauseCommand(mHVVideoView);
-    Command expandCommand = new ExpandCommand((Activity) mContext, getLayoutParams());
-    Command shrinkCommand = new ShrinkCommand((Activity) mContext, getLayoutParams());
+    Command expandCommand = new ExpandCommand((Activity) mContext);
+    Command shrinkCommand = new ShrinkCommand((Activity) mContext);
 
     // 设置命令
     mHVVideoController.setStartCommand(startCommand);
@@ -90,8 +90,8 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator {
     LayoutParams videoViewLayoutParams =
         new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
     videoViewLayoutParams.addRule(CENTER_IN_PARENT);
-    videoViewLayoutParams.leftMargin = DensityUtil.dip2px(getContext(), 16);
-    videoViewLayoutParams.rightMargin = DensityUtil.dip2px(getContext(), 16);
+    videoViewLayoutParams.leftMargin = DensityUtil.dip2px(getContext(), 8);
+    videoViewLayoutParams.rightMargin = DensityUtil.dip2px(getContext(), 8);
     mHVVideoView.setLayoutParams(videoViewLayoutParams);
     addView(mHVVideoView);
   }
@@ -144,16 +144,16 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator {
   @Override public void updateCurrentTimeWhenPlaying(int progress, int bufferPercentage) {
 
     if (!mHVVideoController.isDraggingSeekBar()) {
-      float percent = (float) progress / (float) 100;
-      int timeInMillis = (int) (percent * mHVVideoView.getDuration());
-      mHVVideoView.seekTo(timeInMillis);
+      mHVVideoController.setSeekBarProgress(progress);
+      mHVVideoController.setSeekBarSecondaryProgress(bufferPercentage);
+      mHVVideoController.setCurrentTime(mHVVideoView.getCurrentPosition());
     }
   }
 
   @Override public void onPrepared(MediaPlayer mp) {
 
     mHVVideoController.setCurrentTime(0);
-    mHVVideoController.setEndTime(0);
+    mHVVideoController.setEndTime(mHVVideoView.getDuration());
 
     mHVVideoController.setSeekBarProgress(0);
     mHVVideoController.setSeekBarSecondaryProgress(0);
@@ -163,9 +163,10 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator {
 
     mHVVideoController.setCurrentTime(0);
     mHVVideoController.setSeekBarProgress(0);
+    mHVVideoController.setSeekBarSecondaryProgress(0);
     mHVVideoController.displayPlayImg();
-    mHVVideoController.pause();
 
+    mHVVideoView.stopTimer();
     mHVVideoView.seekTo(0);
   }
 
@@ -176,9 +177,9 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator {
   private void updatePausePlay() {
 
     if (mHVVideoView.isPlaying()) {
-      mHVVideoController.displayPlayImg();
-    } else {
       mHVVideoController.displayPauseImg();
+    } else {
+      mHVVideoController.displayPlayImg();
     }
   }
 
