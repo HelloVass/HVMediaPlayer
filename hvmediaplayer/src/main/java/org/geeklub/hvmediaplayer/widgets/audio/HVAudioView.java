@@ -1,4 +1,4 @@
-package org.geeklub.hvmediaplayer.widgets.factory;
+package org.geeklub.hvmediaplayer.widgets.audio;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -7,30 +7,32 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.CountDownTimer;
+import android.text.TextUtils;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import java.io.IOException;
 import java.util.Map;
+import org.geeklub.hvmediaplayer.imageloader.ImageLoader;
 
 /**
  * Created by HelloVass on 16/3/27.
  */
-public class HVAudioView extends RelativeLayout implements HVPlayable {
-
-  private ImageView mCoverImageView;
+public class HVAudioView extends RelativeLayout {
 
   private MediaPlayer mMediaPlayer;
 
-  private Callback mCallback;
+  private Mediator mHVAudioPlayer;
 
-  private CoverImageLoader mCoverImageLoader;
+  private ImageLoader mImageLoader;
+
+  private ImageView mCoverImageView;
 
   private UpdatePlayableTimer mUpdatePlayableTimer;
 
   private Uri mUri;
 
-  private String mCoverUrl;
+  private String mCoverImageUrl;
 
   private Map<String, String> mHeaders;
 
@@ -67,6 +69,14 @@ public class HVAudioView extends RelativeLayout implements HVPlayable {
     init();
   }
 
+  public void setHVAudioPlayer(Mediator HVAudioPlayer) {
+    mHVAudioPlayer = HVAudioPlayer;
+  }
+
+  public void setImageLoader(ImageLoader imageLoader) {
+    mImageLoader = imageLoader;
+  }
+
   public void setAudioPath(String path) {
     setAudioURI(Uri.parse(path));
   }
@@ -82,17 +92,9 @@ public class HVAudioView extends RelativeLayout implements HVPlayable {
     openAudio();
   }
 
-  public void setCoverUrl(String coverUrl) {
-    mCoverUrl = coverUrl;
-  }
-
-  public void setCoverImageLoader(CoverImageLoader coverImageLoader) {
-    mCoverImageLoader = coverImageLoader;
+  public void setCoverImagePath(String coverImageUrl) {
+    mCoverImageUrl = coverImageUrl;
     loadCoverImage();
-  }
-
-  @Override public void setCallback(Callback callback) {
-    mCallback = callback;
   }
 
   public void setOnPreparedListener(MediaPlayer.OnPreparedListener onPreparedListener) {
@@ -107,29 +109,43 @@ public class HVAudioView extends RelativeLayout implements HVPlayable {
     mOnErrorListener = onErrorListener;
   }
 
-  @Override public int getHVPlayableCurrentPosition() {
+  public void start() {
     if (isInPlaybackState()) {
-      return mMediaPlayer.getCurrentPosition();
+      mMediaPlayer.start();
+      mCurrentState = STATE_PLAYING;
     }
-    return 0;
+    mTargetState = STATE_PLAYING;
   }
 
-  @Override public int getHVPlayableDuration() {
+  public void pause() {
+    if (isInPlaybackState()) {
+      if (mMediaPlayer.isPlaying()) {
+        mMediaPlayer.pause();
+        mCurrentState = STATE_PAUSED;
+      }
+    }
+    mTargetState = STATE_PAUSED;
+  }
+
+  public boolean isPlaying() {
+    return isInPlaybackState() && mMediaPlayer.isPlaying();
+  }
+
+  public int getDuration() {
     if (isInPlaybackState()) {
       return mMediaPlayer.getDuration();
     }
     return -1;
   }
 
-  @Override public boolean isHVPlayablePlaying() {
-    return isInPlaybackState() && mMediaPlayer.isPlaying();
+  public int getCurrentPosition() {
+    if (isInPlaybackState()) {
+      return mMediaPlayer.getCurrentPosition();
+    }
+    return 0;
   }
 
-  @Override public int getHVPlayableBufferPercentage() {
-    return getBufferPercentage();
-  }
-
-  @Override public void seekToHVPlayable(int timeInMillis) {
+  public void seekTo(int timeInMillis) {
     if (isInPlaybackState()) {
       mMediaPlayer.seekTo(timeInMillis);
       mSeekWhenPrepared = 0;
@@ -148,80 +164,61 @@ public class HVAudioView extends RelativeLayout implements HVPlayable {
     }
   }
 
-  @Override public void resetPlayableTimer() {
-    mUpdatePlayableTimer = new UpdatePlayableTimer(getHVPlayableDuration(), 250L);
+  public void resetTimer() {
+    mUpdatePlayableTimer = new UpdatePlayableTimer(getDuration(), 250L);
     mUpdatePlayableTimer.start();
   }
 
-  @Override public void stopPlayableTimer() {
+  public void stopTimer() {
     mUpdatePlayableTimer.cancel();
     mUpdatePlayableTimer = null;
   }
 
-  @Override public void pauseHVPlayable() {
-    if (isInPlaybackState()) {
-      if (mMediaPlayer.isPlaying()) {
-        mMediaPlayer.pause();
-        mCurrentState = STATE_PAUSED;
-      }
-    }
-    mTargetState = STATE_PAUSED;
-  }
-
-  @Override public void startHVPlayable() {
-    if (isInPlaybackState()) {
-      mMediaPlayer.start();
-      mCurrentState = STATE_PLAYING;
-    }
-    mTargetState = STATE_PLAYING;
-  }
-
   @Override protected void onDetachedFromWindow() {
     super.onDetachedFromWindow();
-    release(true); // 释放 MediaPlayer
+    release(true);
   }
 
   private void init() {
+
     setFocusable(true);
     setFocusableInTouchMode(true);
     requestFocus();
+
     mCurrentState = STATE_IDLE;
     mTargetState = STATE_IDLE;
 
-    mCoverImageView = new ImageView(getContext());
+    addCoverImageView();
+    setUpCallbacks();
+  }
 
+  private void addCoverImageView() {
+    mCoverImageView = new ImageView(getContext());
     LayoutParams coverLayoutParams =
         new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
     mCoverImageView.setLayoutParams(coverLayoutParams);
     mCoverImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-
     addView(mCoverImageView);
-
-    setUpCallbacks();
   }
 
   private void setUpCallbacks() {
 
     setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
       @Override public void onPrepared(MediaPlayer mp) {
-        if (mCallback != null) {
-          mCallback.onPrepared();
-        }
+        mHVAudioPlayer.onPrepared(mp);
       }
     });
 
     setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
       @Override public void onCompletion(MediaPlayer mp) {
-        if (mCallback != null) {
-          mCallback.onCompletion(mp);
-        }
+        mHVAudioPlayer.onCompletion(mp);
       }
     });
 
     setOnErrorListener(new MediaPlayer.OnErrorListener() {
       @Override public boolean onError(MediaPlayer mp, int what, int extra) {
-        if (mCallback != null) {
-          mCallback.onError(mp);
+        if (mHVAudioPlayer != null) {
+          mHVAudioPlayer.onError(mp, what, extra);
           return true;
         }
         return false;
@@ -230,6 +227,7 @@ public class HVAudioView extends RelativeLayout implements HVPlayable {
   }
 
   private void openAudio() {
+
     if (mUri == null) {
       return;
     }
@@ -260,13 +258,27 @@ public class HVAudioView extends RelativeLayout implements HVPlayable {
   }
 
   private void loadCoverImage() {
-    if (mCoverUrl == null) {
+
+    if (mImageLoader == null) {
       return;
     }
 
-    if (mCoverImageLoader != null) {
-      mCoverImageLoader.loadCoverImage(mCoverImageView, mCoverUrl);
+    if (mCoverImageView == null) {
+      return;
     }
+
+    if (mCoverImageUrl == null || TextUtils.isEmpty(mCoverImageUrl.trim())) {
+      return;
+    }
+
+    mImageLoader.displayImage(mCoverImageView, mCoverImageUrl);
+  }
+
+  private int getBufferPercentage() {
+    if (mMediaPlayer != null) {
+      return mCurrentBufferPercentage;
+    }
+    return 0;
   }
 
   private void release(boolean cleatTargetState) {
@@ -291,16 +303,6 @@ public class HVAudioView extends RelativeLayout implements HVPlayable {
         && mCurrentState != STATE_PREPARING);
   }
 
-  private int getBufferPercentage() {
-    if (mMediaPlayer != null) {
-      return mCurrentBufferPercentage;
-    }
-    return 0;
-  }
-
-  /**
-   * 缓冲完成后的回调
-   */
   private class InnerOnPreparedListener implements MediaPlayer.OnPreparedListener {
 
     @Override public void onPrepared(MediaPlayer mp) {
@@ -314,11 +316,11 @@ public class HVAudioView extends RelativeLayout implements HVPlayable {
       int seekToPosition = mSeekWhenPrepared;
 
       if (seekToPosition != 0) {
-        seekToHVPlayable(seekToPosition);
+        seekTo(seekToPosition);
       }
 
       if (mTargetState == STATE_PLAYING) {
-        startHVPlayable();
+        start();
       }
     }
   }
@@ -377,14 +379,9 @@ public class HVAudioView extends RelativeLayout implements HVPlayable {
   }
 
   private class InnerBufferingUpdateListener implements MediaPlayer.OnBufferingUpdateListener {
-
     @Override public void onBufferingUpdate(MediaPlayer mp, int percent) {
       mCurrentBufferPercentage = percent;
     }
-  }
-
-  public interface CoverImageLoader {
-    void loadCoverImage(ImageView coverImageView, String coverUrl);
   }
 
   private class UpdatePlayableTimer extends CountDownTimer {
@@ -395,9 +392,9 @@ public class HVAudioView extends RelativeLayout implements HVPlayable {
 
     @Override public void onTick(long millisUntilFinished) {
 
-      if (mCallback != null && isHVPlayablePlaying()) {
-        float percent = (float) getHVPlayableCurrentPosition() / (float) getHVPlayableDuration();
-        mCallback.onProgressChanged((int) (percent * 100), getHVPlayableBufferPercentage());
+      if (isPlaying()) {
+        float percent = (float) getCurrentPosition() / (float) getDuration();
+        mHVAudioPlayer.updateCurrentTimeWhenPlaying((int) (percent * 100), getBufferPercentage());
       }
     }
 

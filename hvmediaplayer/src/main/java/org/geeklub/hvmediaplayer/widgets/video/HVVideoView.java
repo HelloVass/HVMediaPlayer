@@ -1,4 +1,4 @@
-package org.geeklub.hvmediaplayer.widgets.factory;
+package org.geeklub.hvmediaplayer.widgets.video;
 
 import android.content.Context;
 import android.media.MediaPlayer;
@@ -8,59 +8,31 @@ import android.widget.VideoView;
 /**
  * Created by HelloVass on 16/3/24.
  */
-public class HVVideoView extends VideoView implements HVPlayable {
+public class HVVideoView extends VideoView {
 
   private static final String TAG = HVVideoView.class.getSimpleName();
 
   private UpdatePlayableTimer mUpdatePlayableTimer;
 
-  private Callback mCallback;
+  private Mediator mHVVideoPlayer;
 
   public HVVideoView(Context context) {
     super(context);
     init();
   }
 
-  @Override public void resetPlayableTimer() {
+  public void setHVVideoPlayer(Mediator HVVideoPlayer) {
+    mHVVideoPlayer = HVVideoPlayer;
+  }
+
+  public void resetTimer() {
     mUpdatePlayableTimer = new UpdatePlayableTimer(getDuration(), 250L);
     mUpdatePlayableTimer.start();
   }
 
-  @Override public void stopPlayableTimer() {
+  public void stopTimer() {
     mUpdatePlayableTimer.cancel();
     mUpdatePlayableTimer = null;
-  }
-
-  @Override public void pauseHVPlayable() {
-    pause();
-  }
-
-  @Override public void startHVPlayable() {
-    start();
-  }
-
-  @Override public boolean isHVPlayablePlaying() {
-    return isPlaying();
-  }
-
-  @Override public int getHVPlayableBufferPercentage() {
-    return getBufferPercentage();
-  }
-
-  @Override public int getHVPlayableCurrentPosition() {
-    return getCurrentPosition();
-  }
-
-  @Override public int getHVPlayableDuration() {
-    return getDuration();
-  }
-
-  @Override public void seekToHVPlayable(int timeInMillis) {
-    seekTo(timeInMillis);
-  }
-
-  @Override public void setCallback(Callback callback) {
-    mCallback = callback;
   }
 
   private void init() {
@@ -68,26 +40,24 @@ public class HVVideoView extends VideoView implements HVPlayable {
     setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
 
       @Override public void onPrepared(MediaPlayer mp) {
-        if (mCallback != null) {
-          mCallback.onPrepared();
-        }
+        mHVVideoPlayer.onPrepared(mp);
       }
     });
 
     setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
       @Override public void onCompletion(MediaPlayer mp) {
-        if (mCallback != null) {
-          mCallback.onCompletion(mp);
-        }
+        mHVVideoPlayer.onCompletion(mp);
       }
     });
 
     setOnErrorListener(new MediaPlayer.OnErrorListener() {
       @Override public boolean onError(MediaPlayer mp, int what, int extra) {
-        if (mCallback != null) {
-          mCallback.onError(mp);
+
+        if (mHVVideoPlayer != null) {
+          mHVVideoPlayer.onError(mp,what,extra);
           return true;
         }
+
         return false;
       }
     });
@@ -101,9 +71,9 @@ public class HVVideoView extends VideoView implements HVPlayable {
 
     @Override public void onTick(long millisUntilFinished) {
 
-      if (mCallback != null && isHVPlayablePlaying()) {
-        float percent = (float) getCurrentPosition() / (float) getDuration();
-        mCallback.onProgressChanged((int) (percent * 100), getBufferPercentage());
+      if (isPlaying()) {
+        float progress = (float) getCurrentPosition() / (float) getDuration();
+        mHVVideoPlayer.updateCurrentTimeWhenPlaying((int) (progress * 100), getBufferPercentage());
       }
     }
 

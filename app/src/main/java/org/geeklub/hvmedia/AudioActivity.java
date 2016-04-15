@@ -1,14 +1,13 @@
 package org.geeklub.hvmedia;
 
-import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
-import com.bumptech.glide.Glide;
+import android.widget.FrameLayout;
+import org.geeklub.hvmedia.imageloader.GlideImageLoaderFactory;
 import org.geeklub.hvmediaplayer.utils.DensityUtil;
-import org.geeklub.hvmediaplayer.widgets.HVMediaPlayer;
-import org.geeklub.hvmediaplayer.widgets.factory.HVAudioView;
+import org.geeklub.hvmediaplayer.widgets.audio.HVAudioPlayer;
 
 /**
  * Created by HelloVass on 16/3/29.
@@ -25,50 +24,36 @@ public class AudioActivity extends AppCompatActivity {
   private static final String TEST_AUDIO_COVER_URL =
       "http://juju.inbbuy.cn/2016/03/29/8e4be12a5677a5cccecdfa6503534e0b.png@440w_2o";
 
-  private HVMediaPlayer mHVMediaPlayer;
+  private View mOpenAudioPlayerButton;
 
   @Override protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
     setContentView(R.layout.activity_audio);
 
-    mHVMediaPlayer = (HVMediaPlayer) findViewById(R.id.media_player);
-  }
+    mOpenAudioPlayerButton = findViewById(R.id.btn_open_audio_player);
 
-  @Override protected void onPostCreate(Bundle savedInstanceState) {
-    super.onPostCreate(savedInstanceState);
-
-    mHVMediaPlayer.buildAudioPlayer(TEST_AUDIO_URL, TEST_AUDIO_COVER_URL,
-        new HVAudioView.CoverImageLoader() {
-          @Override public void loadCoverImage(ImageView coverImageView, String coverUrl) {
-            Glide.with(AudioActivity.this).load(coverUrl).centerCrop().into(coverImageView);
-          }
-        });
-
-    mHVMediaPlayer.setCallback(new HVMediaPlayer.Callback() {
-      @Override public void onEnterFullScreen() {
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-        ViewGroup.LayoutParams layoutParams = mHVMediaPlayer.getLayoutParams();
-        layoutParams.width = ViewGroup.LayoutParams.MATCH_PARENT;
-        layoutParams.height = ViewGroup.LayoutParams.MATCH_PARENT;
-      }
-
-      @Override public void onExitScreen() {
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        ViewGroup.LayoutParams layoutParams = mHVMediaPlayer.getLayoutParams();
-        layoutParams.width = DensityUtil.dip2px(AudioActivity.this, 320);
-        layoutParams.height = DensityUtil.dip2px(AudioActivity.this, 180);
+    mOpenAudioPlayerButton.setOnClickListener(new View.OnClickListener() {
+      @Override public void onClick(View v) {
+        addAudioPlayerToContentView();
       }
     });
   }
 
-  @Override protected void onPause() {
-    super.onPause();
-    mHVMediaPlayer.onPause();
-  }
+  private void addAudioPlayerToContentView() {
 
-  @Override protected void onResume() {
-    super.onResume();
-    mHVMediaPlayer.onResume();
+    FrameLayout container =
+        (FrameLayout) getWindow().getDecorView().findViewById(android.R.id.content);
+
+    HVAudioPlayer audioPlayer = new HVAudioPlayer.Builder(this).setAudioUrl(TEST_AUDIO_URL)
+        .setCoverImageUrl(TEST_AUDIO_COVER_URL)
+        .setImageLoader(new GlideImageLoaderFactory(this).createImageLoader())
+        .build();
+
+    ViewGroup.LayoutParams audioPlayerLayoutParams =
+        new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+            DensityUtil.dip2px(this, 220));
+
+    container.addView(audioPlayer, audioPlayerLayoutParams);
   }
 }

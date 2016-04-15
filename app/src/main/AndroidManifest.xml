@@ -27,13 +27,15 @@
 
     <activity
       android:name=".AudioActivity"
-      android:configChanges="orientation|screenSize">
+      android:configChanges="orientation|screenSize"
+      android:screenOrientation="portrait">
 
     </activity>
 
     <activity
       android:name=".VideoActivity"
-      android:configChanges="orientation|screenSize">
+      android:configChanges="orientation|screenSize"
+      android:screenOrientation="portrait">
 
     </activity>
 
