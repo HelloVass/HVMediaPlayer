@@ -26,6 +26,8 @@ public class AudioActivity extends AppCompatActivity {
 
   private View mOpenAudioPlayerButton;
 
+  private HVAudioPlayer mAudioPlayer;
+
   @Override protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
@@ -33,8 +35,20 @@ public class AudioActivity extends AppCompatActivity {
 
     mOpenAudioPlayerButton = findViewById(R.id.btn_open_audio_player);
 
+    mAudioPlayer = new HVAudioPlayer.Builder(this).setAudioUrl(TEST_AUDIO_URL)
+        .setCoverImageUrl(TEST_AUDIO_COVER_URL)
+        .setImageLoader(new GlideImageLoaderFactory(this).createImageLoader())
+        .setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+            DensityUtil.dip2px(this, 220)))
+        .build();
+
     mOpenAudioPlayerButton.setOnClickListener(new View.OnClickListener() {
       @Override public void onClick(View v) {
+
+        if (mAudioPlayer.getParent() != null) {
+          return;
+        }
+
         addAudioPlayerToContentView();
       }
     });
@@ -45,15 +59,6 @@ public class AudioActivity extends AppCompatActivity {
     FrameLayout container =
         (FrameLayout) getWindow().getDecorView().findViewById(android.R.id.content);
 
-    HVAudioPlayer audioPlayer = new HVAudioPlayer.Builder(this).setAudioUrl(TEST_AUDIO_URL)
-        .setCoverImageUrl(TEST_AUDIO_COVER_URL)
-        .setImageLoader(new GlideImageLoaderFactory(this).createImageLoader())
-        .build();
-
-    ViewGroup.LayoutParams audioPlayerLayoutParams =
-        new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-            DensityUtil.dip2px(this, 220));
-
-    container.addView(audioPlayer, audioPlayerLayoutParams);
+    container.addView(mAudioPlayer);
   }
 }

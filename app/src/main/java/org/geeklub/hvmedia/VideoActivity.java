@@ -30,8 +30,18 @@ public class VideoActivity extends AppCompatActivity {
 
     mOpenVideoPlayerButton = findViewById(R.id.btn_open_video_player);
 
+    mVideoPlayer = new HVVideoPlayer.Builder(this).setVideoUrl(TEST_VIDEO_URL)
+        .setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+            DensityUtil.dip2px(this, 220)))
+        .build();
+
     mOpenVideoPlayerButton.setOnClickListener(new View.OnClickListener() {
       @Override public void onClick(View v) {
+
+        if (mVideoPlayer.getParent() != null) {
+          return;
+        }
+
         addVideoPlayerToContentView();
       }
     });
@@ -54,11 +64,6 @@ public class VideoActivity extends AppCompatActivity {
 
     FrameLayout container =
         (FrameLayout) getWindow().getDecorView().findViewById(android.R.id.content);
-
-    mVideoPlayer = new HVVideoPlayer.Builder(this).setVideoUrl(TEST_VIDEO_URL)
-        .setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-            DensityUtil.dip2px(this, 220)))
-        .build();
 
     container.addView(mVideoPlayer);
   }

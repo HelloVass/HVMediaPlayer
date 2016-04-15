@@ -28,6 +28,8 @@ public class HVAudioPlayer extends RelativeLayout implements Mediator {
 
   private ImageLoader mImageLoader;
 
+  private ViewGroup.LayoutParams mLayoutParams;
+
   private HVAudioView mHVAudioView;
 
   private HVAudioController mHVAudioController;
@@ -41,12 +43,14 @@ public class HVAudioPlayer extends RelativeLayout implements Mediator {
     mAudioUrl = builder.mAudioUrl;
     mCoverImageUrl = builder.mCoverImageUrl;
     mImageLoader = builder.mImageLoader;
+    mLayoutParams = builder.mLayoutParams;
 
     init();
   }
 
   public void init() {
 
+    setLayoutParams(mLayoutParams);
     setBackgroundColor(Color.BLACK);
 
     // 创建接受者
@@ -200,6 +204,8 @@ public class HVAudioPlayer extends RelativeLayout implements Mediator {
 
     private ImageLoader mImageLoader;
 
+    private ViewGroup.LayoutParams mLayoutParams;
+
     public Builder(Context context) {
       mContext = context;
     }
@@ -216,6 +222,11 @@ public class HVAudioPlayer extends RelativeLayout implements Mediator {
 
     public Builder setImageLoader(ImageLoader imageLoader) {
       mImageLoader = imageLoader;
+      return this;
+    }
+
+    public Builder setLayoutParams(ViewGroup.LayoutParams layoutParams) {
+      mLayoutParams = layoutParams;
       return this;
     }
 
