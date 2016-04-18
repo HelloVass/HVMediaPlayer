@@ -46,6 +46,10 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator {
     init();
   }
 
+  public boolean isAddedToContent() {
+    return getParent() != null;
+  }
+
   @Override public void doPlayPause() {
 
     if (mHVVideoView.isPlaying()) {

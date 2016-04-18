@@ -37,7 +37,7 @@ public class VideoActivity extends AppCompatActivity {
     mOpenVideoPlayerButton.setOnClickListener(new View.OnClickListener() {
       @Override public void onClick(View v) {
 
-        if (mVideoPlayer.getParent() != null) {
+        if (mVideoPlayer.isAddedToContent()){
           return;
         }
 
