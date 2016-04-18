@@ -1,6 +1,5 @@
 package org.geeklub.hvmedia;
 
-import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -45,19 +44,6 @@ public class VideoActivity extends AppCompatActivity {
         addVideoPlayerToContentView();
       }
     });
-  }
-
-  @Override public void onConfigurationChanged(Configuration newConfig) {
-    super.onConfigurationChanged(newConfig);
-
-    if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
-      mVideoPlayer.getLayoutParams().height = ViewGroup.LayoutParams.MATCH_PARENT;
-      mVideoPlayer.getLayoutParams().width = ViewGroup.LayoutParams.MATCH_PARENT;
-    } else if (getResources().getConfiguration().orientation
-        == Configuration.ORIENTATION_PORTRAIT) {
-      mVideoPlayer.getLayoutParams().height = DensityUtil.dip2px(this, 220);
-      mVideoPlayer.getLayoutParams().width = ViewGroup.LayoutParams.MATCH_PARENT;
-    }
   }
 
   private void addVideoPlayerToContentView() {

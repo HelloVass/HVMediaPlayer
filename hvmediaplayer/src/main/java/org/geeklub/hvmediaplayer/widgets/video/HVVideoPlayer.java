@@ -46,7 +46,7 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator {
     init();
   }
 
-  public void init() {
+  private void init() {
 
     setLayoutParams(mLayoutParams);
     setBackgroundColor(Color.BLACK);
@@ -73,8 +73,8 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator {
     // 构造命令
     Command startCommand = new StartCommand(mHVVideoView);
     Command pauseCommand = new PauseCommand(mHVVideoView);
-    Command expandCommand = new ExpandCommand((Activity) mContext);
-    Command shrinkCommand = new ShrinkCommand((Activity) mContext);
+    Command expandCommand = new ExpandCommand((Activity) mContext,getLayoutParams());
+    Command shrinkCommand = new ShrinkCommand((Activity) mContext,getLayoutParams());
 
     // 设置命令
     mHVVideoController.setStartCommand(startCommand);
