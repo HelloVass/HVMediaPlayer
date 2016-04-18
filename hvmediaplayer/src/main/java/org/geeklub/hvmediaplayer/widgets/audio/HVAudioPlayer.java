@@ -48,44 +48,6 @@ public class HVAudioPlayer extends RelativeLayout implements Mediator {
     init();
   }
 
-  public void init() {
-
-    setLayoutParams(mLayoutParams);
-    setBackgroundColor(Color.BLACK);
-
-    // 创建接受者
-    mHVAudioView = new HVAudioView(mContext);
-
-    mHVAudioView.setAudioPath(mAudioUrl);
-    mHVAudioView.setImageLoader(mImageLoader);
-    mHVAudioView.setCoverImagePath(mCoverImageUrl);
-
-    mHVAudioView.setHVAudioPlayer(this);
-    mHVAudioView.setOnTouchListener(new OnTouchListener() {
-      @Override public boolean onTouch(View v, MotionEvent event) {
-        if (event.getAction() == MotionEvent.ACTION_DOWN) {
-          hideOrShowMediaController();
-        }
-        return false;
-      }
-    });
-
-    // 创建请求者
-    mHVAudioController = new HVAudioController(mContext);
-
-    mHVAudioController.setHVAudioPlayer(this);
-    // 构造命令
-    Command startCommand = new StartCommand(mHVAudioView);
-    Command pauseCommand = new PauseCommand(mHVAudioView);
-
-    // 设置命令
-    mHVAudioController.setStartCommand(startCommand);
-    mHVAudioController.setPauseCommand(pauseCommand);
-
-    addPlayable();
-    addController();
-  }
-
   @Override public void doPlayPause() {
 
     if (mHVAudioView.isPlaying()) {
@@ -142,6 +104,44 @@ public class HVAudioPlayer extends RelativeLayout implements Mediator {
 
   @Override public void onError(MediaPlayer mp, int what, int extra) {
 
+  }
+
+  private void init() {
+
+    setLayoutParams(mLayoutParams);
+    setBackgroundColor(Color.BLACK);
+
+    // 创建接受者
+    mHVAudioView = new HVAudioView(mContext);
+
+    mHVAudioView.setAudioPath(mAudioUrl);
+    mHVAudioView.setImageLoader(mImageLoader);
+    mHVAudioView.setCoverImagePath(mCoverImageUrl);
+
+    mHVAudioView.setHVAudioPlayer(this);
+    mHVAudioView.setOnTouchListener(new OnTouchListener() {
+      @Override public boolean onTouch(View v, MotionEvent event) {
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+          hideOrShowMediaController();
+        }
+        return false;
+      }
+    });
+
+    // 创建请求者
+    mHVAudioController = new HVAudioController(mContext);
+
+    mHVAudioController.setHVAudioPlayer(this);
+    // 构造命令
+    Command startCommand = new StartCommand(mHVAudioView);
+    Command pauseCommand = new PauseCommand(mHVAudioView);
+
+    // 设置命令
+    mHVAudioController.setStartCommand(startCommand);
+    mHVAudioController.setPauseCommand(pauseCommand);
+
+    addPlayable();
+    addController();
   }
 
   private void addPlayable() {

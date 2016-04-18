@@ -46,64 +46,6 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator {
     init();
   }
 
-  private void init() {
-
-    setLayoutParams(mLayoutParams);
-    setBackgroundColor(Color.BLACK);
-
-    // 创建接受者
-    mHVVideoView = new HVVideoView(mContext);
-    mHVVideoView.setVideoPath(mVideoUrl);
-    mHVVideoView.setHVVideoPlayer(this);
-
-    mHVVideoView.setOnTouchListener(new OnTouchListener() {
-      @Override public boolean onTouch(View v, MotionEvent event) {
-
-        if (event.getAction() == MotionEvent.ACTION_DOWN) {
-          hideOrShowMediaController();
-        }
-        return false;
-      }
-    });
-
-    // 创建请求者
-    mHVVideoController = new HVVideoController(mContext);
-    mHVVideoController.setHVVideoPlayer(this);
-
-    // 构造命令
-    Command startCommand = new StartCommand(mHVVideoView);
-    Command pauseCommand = new PauseCommand(mHVVideoView);
-    Command expandCommand = new ExpandCommand((Activity) mContext,getLayoutParams());
-    Command shrinkCommand = new ShrinkCommand((Activity) mContext,getLayoutParams());
-
-    // 设置命令
-    mHVVideoController.setStartCommand(startCommand);
-    mHVVideoController.setPauseCommand(pauseCommand);
-    mHVVideoController.setExpandCommand(expandCommand);
-    mHVVideoController.setShrinkCommand(shrinkCommand);
-
-    addPlayable();
-    addController();
-  }
-
-  private void addPlayable() {
-    LayoutParams videoViewLayoutParams =
-        new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-    videoViewLayoutParams.addRule(CENTER_IN_PARENT);
-    videoViewLayoutParams.leftMargin = DensityUtil.dip2px(getContext(), 8);
-    videoViewLayoutParams.rightMargin = DensityUtil.dip2px(getContext(), 8);
-    mHVVideoView.setLayoutParams(videoViewLayoutParams);
-    addView(mHVVideoView);
-  }
-
-  private void addController() {
-    LayoutParams controllerLayoutParams =
-        new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, DensityUtil.dip2px(getContext(), 40));
-    controllerLayoutParams.addRule(ALIGN_PARENT_BOTTOM);
-    mHVVideoController.setLayoutParams(controllerLayoutParams);
-    addView(mHVVideoController);
-  }
-
   @Override public void doPlayPause() {
 
     if (mHVVideoView.isPlaying()) {
@@ -213,6 +155,64 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator {
     }
 
     mIsControllerHidden = !mIsControllerHidden;
+  }
+
+  private void init() {
+
+    setLayoutParams(mLayoutParams);
+    setBackgroundColor(Color.BLACK);
+
+    // 创建接受者
+    mHVVideoView = new HVVideoView(mContext);
+    mHVVideoView.setVideoPath(mVideoUrl);
+    mHVVideoView.setHVVideoPlayer(this);
+
+    mHVVideoView.setOnTouchListener(new OnTouchListener() {
+      @Override public boolean onTouch(View v, MotionEvent event) {
+
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+          hideOrShowMediaController();
+        }
+        return false;
+      }
+    });
+
+    // 创建请求者
+    mHVVideoController = new HVVideoController(mContext);
+    mHVVideoController.setHVVideoPlayer(this);
+
+    // 构造命令
+    Command startCommand = new StartCommand(mHVVideoView);
+    Command pauseCommand = new PauseCommand(mHVVideoView);
+    Command expandCommand = new ExpandCommand((Activity) mContext, getLayoutParams());
+    Command shrinkCommand = new ShrinkCommand((Activity) mContext, getLayoutParams());
+
+    // 设置命令
+    mHVVideoController.setStartCommand(startCommand);
+    mHVVideoController.setPauseCommand(pauseCommand);
+    mHVVideoController.setExpandCommand(expandCommand);
+    mHVVideoController.setShrinkCommand(shrinkCommand);
+
+    addPlayable();
+    addController();
+  }
+
+  private void addPlayable() {
+    LayoutParams videoViewLayoutParams =
+        new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+    videoViewLayoutParams.addRule(CENTER_IN_PARENT);
+    videoViewLayoutParams.leftMargin = DensityUtil.dip2px(getContext(), 8);
+    videoViewLayoutParams.rightMargin = DensityUtil.dip2px(getContext(), 8);
+    mHVVideoView.setLayoutParams(videoViewLayoutParams);
+    addView(mHVVideoView);
+  }
+
+  private void addController() {
+    LayoutParams controllerLayoutParams =
+        new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, DensityUtil.dip2px(getContext(), 40));
+    controllerLayoutParams.addRule(ALIGN_PARENT_BOTTOM);
+    mHVVideoController.setLayoutParams(controllerLayoutParams);
+    addView(mHVVideoController);
   }
 
   public static class Builder {
