@@ -46,6 +46,19 @@ public class HVVideoController extends FrameLayout {
     mHVVideoPlayer = HVVideoPlayer;
   }
 
+  public void show() {
+    setVisibility(VISIBLE);
+  }
+
+  public void hide() {
+    setVisibility(GONE);
+  }
+
+  /**
+   * SeekBar 是否正在被用户拖动ing
+   *
+   * @return 如果正在被拖动，返回true
+   */
   public boolean isDraggingSeekBar() {
     return mIsDraggingSeekBar;
   }

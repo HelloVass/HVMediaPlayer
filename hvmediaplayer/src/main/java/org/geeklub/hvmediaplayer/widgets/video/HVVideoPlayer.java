@@ -132,6 +132,8 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator {
       return;
     }
 
+    mHVVideoController.show();
+
     mHVVideoController.setCurrentTime(0);
     mHVVideoController.setEndTime(mHVVideoView.getDuration());
 
@@ -218,6 +220,7 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator {
     // 创建请求者
     mHVVideoController = new HVVideoController(mContext);
     mHVVideoController.setHVVideoPlayer(this);
+    mHVVideoController.hide();
 
     // 构造命令
     Command startCommand = new StartCommand(mHVVideoView);
