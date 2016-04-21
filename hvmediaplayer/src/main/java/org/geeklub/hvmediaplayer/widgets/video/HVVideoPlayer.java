@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.media.MediaPlayer;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,7 +11,6 @@ import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.RelativeLayout;
 import org.geeklub.hvmediaplayer.utils.DensityUtil;
-import org.geeklub.hvmediaplayer.utils.TimeUtil;
 import org.geeklub.hvmediaplayer.widgets.video.support_commands.Command;
 import org.geeklub.hvmediaplayer.widgets.video.support_commands.ExpandCommand;
 import org.geeklub.hvmediaplayer.widgets.video.support_commands.PauseCommand;
@@ -98,9 +96,6 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator {
 
   @Override public void updateCurrentTimeWhenPlaying(int progress, int bufferPercentage) {
 
-    Log.i(TAG,
-        "updateCurrentTimeWhenPlaying -->>>" + TimeUtil.getTime(mHVVideoView.getCurrentPosition()));
-
     if (!mHVVideoController.isDraggingSeekBar()) {
       mHVVideoController.setSeekBarProgress(progress);
       mHVVideoController.setSeekBarSecondaryProgress(bufferPercentage);
@@ -109,8 +104,6 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator {
   }
 
   @Override public void onPrepared(MediaPlayer mp) {
-
-    Log.i(TAG, "onPrepared -->>>");
 
     mHVVideoController.setCurrentTime(0);
     mHVVideoController.setEndTime(mHVVideoView.getDuration());
