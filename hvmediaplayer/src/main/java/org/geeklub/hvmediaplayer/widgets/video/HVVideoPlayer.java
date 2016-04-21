@@ -9,7 +9,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import org.geeklub.hvmediaplayer.R;
 import org.geeklub.hvmediaplayer.utils.DensityUtil;
 import org.geeklub.hvmediaplayer.widgets.video.support_commands.Command;
 import org.geeklub.hvmediaplayer.widgets.video.support_commands.ExpandCommand;
@@ -33,6 +35,8 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator {
   private HVVideoView mHVVideoView;
 
   private HVVideoController mHVVideoController;
+
+  private ImageView mCloseButton;
 
   private boolean mIsEnterFullScreen = false;
 
@@ -156,6 +160,57 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator {
 
   }
 
+  private void init() {
+
+    setLayoutParams(mLayoutParams);
+    setBackgroundColor(Color.BLACK);
+
+    // 创建接受者
+    mHVVideoView = new HVVideoView(mContext);
+    mHVVideoView.setVideoPath(mVideoUrl);
+    mHVVideoView.setHVVideoPlayer(this);
+
+    mHVVideoView.setOnTouchListener(new OnTouchListener() {
+      @Override public boolean onTouch(View v, MotionEvent event) {
+
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+          hideOrShowMediaController();
+        }
+        return false;
+      }
+    });
+
+    // 创建请求者
+    mHVVideoController = new HVVideoController(mContext);
+    mHVVideoController.setHVVideoPlayer(this);
+    mHVVideoController.hide();
+
+    // 构造命令
+    Command startCommand = new StartCommand(mHVVideoView);
+    Command pauseCommand = new PauseCommand(mHVVideoView);
+    Command expandCommand = new ExpandCommand((Activity) mContext, getLayoutParams());
+    Command shrinkCommand = new ShrinkCommand((Activity) mContext, getLayoutParams());
+
+    // 设置命令
+    mHVVideoController.setStartCommand(startCommand);
+    mHVVideoController.setPauseCommand(pauseCommand);
+    mHVVideoController.setExpandCommand(expandCommand);
+    mHVVideoController.setShrinkCommand(shrinkCommand);
+
+    // 创建关闭按钮
+    mCloseButton = new ImageView(mContext);
+    mCloseButton.setImageResource(R.mipmap.ic_close_white_24dp);
+    mCloseButton.setOnClickListener(new OnClickListener() {
+      @Override public void onClick(View v) {
+
+      }
+    });
+
+    addPlayable();
+    addController();
+    addCloseButton();
+  }
+
   private void updatePausePlay() {
 
     if (mHVVideoView.isPlaying()) {
@@ -197,47 +252,6 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator {
     mIsControllerHidden = !mIsControllerHidden;
   }
 
-  private void init() {
-
-    setLayoutParams(mLayoutParams);
-    setBackgroundColor(Color.BLACK);
-
-    // 创建接受者
-    mHVVideoView = new HVVideoView(mContext);
-    mHVVideoView.setVideoPath(mVideoUrl);
-    mHVVideoView.setHVVideoPlayer(this);
-
-    mHVVideoView.setOnTouchListener(new OnTouchListener() {
-      @Override public boolean onTouch(View v, MotionEvent event) {
-
-        if (event.getAction() == MotionEvent.ACTION_DOWN) {
-          hideOrShowMediaController();
-        }
-        return false;
-      }
-    });
-
-    // 创建请求者
-    mHVVideoController = new HVVideoController(mContext);
-    mHVVideoController.setHVVideoPlayer(this);
-    mHVVideoController.hide();
-
-    // 构造命令
-    Command startCommand = new StartCommand(mHVVideoView);
-    Command pauseCommand = new PauseCommand(mHVVideoView);
-    Command expandCommand = new ExpandCommand((Activity) mContext, getLayoutParams());
-    Command shrinkCommand = new ShrinkCommand((Activity) mContext, getLayoutParams());
-
-    // 设置命令
-    mHVVideoController.setStartCommand(startCommand);
-    mHVVideoController.setPauseCommand(pauseCommand);
-    mHVVideoController.setExpandCommand(expandCommand);
-    mHVVideoController.setShrinkCommand(shrinkCommand);
-
-    addPlayable();
-    addController();
-  }
-
   private void addPlayable() {
     LayoutParams videoViewLayoutParams =
         new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
@@ -254,6 +268,17 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator {
     controllerLayoutParams.addRule(ALIGN_PARENT_BOTTOM);
     mHVVideoController.setLayoutParams(controllerLayoutParams);
     addView(mHVVideoController);
+  }
+
+  private void addCloseButton() {
+    LayoutParams closeButtonLayoutParams =
+        new LayoutParams(DensityUtil.dip2px(mContext, 24), DensityUtil.dip2px(mContext, 24));
+    closeButtonLayoutParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+    closeButtonLayoutParams.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+    closeButtonLayoutParams.setMargins(0, DensityUtil.dip2px(mContext, 16),
+        DensityUtil.dip2px(mContext, 16), 0);
+    mCloseButton.setLayoutParams(closeButtonLayoutParams);
+    addView(mCloseButton);
   }
 
   public static class Builder {
