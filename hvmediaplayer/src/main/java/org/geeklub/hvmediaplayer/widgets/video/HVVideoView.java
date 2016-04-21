@@ -3,6 +3,7 @@ package org.geeklub.hvmediaplayer.widgets.video;
 import android.content.Context;
 import android.media.MediaPlayer;
 import android.os.CountDownTimer;
+import android.util.Log;
 import android.widget.VideoView;
 
 /**
@@ -40,24 +41,26 @@ public class HVVideoView extends VideoView {
     setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
 
       @Override public void onPrepared(MediaPlayer mp) {
-        mHVVideoPlayer.onPrepared(mp);
+        if (mHVVideoPlayer != null) {
+          mHVVideoPlayer.onPrepared(mp);
+        }
       }
     });
 
     setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
       @Override public void onCompletion(MediaPlayer mp) {
-        mHVVideoPlayer.onCompletion(mp);
+        if (mHVVideoPlayer != null) {
+          mHVVideoPlayer.onCompletion(mp);
+        }
       }
     });
 
     setOnErrorListener(new MediaPlayer.OnErrorListener() {
       @Override public boolean onError(MediaPlayer mp, int what, int extra) {
-
         if (mHVVideoPlayer != null) {
-          mHVVideoPlayer.onError(mp,what,extra);
+          mHVVideoPlayer.onError(mp, what, extra);
           return true;
         }
-
         return false;
       }
     });
@@ -71,7 +74,9 @@ public class HVVideoView extends VideoView {
 
     @Override public void onTick(long millisUntilFinished) {
 
-      if (isPlaying()) {
+      Log.i(TAG, "onTick isPlaying -->>>" + isPlaying());
+
+      if (mHVVideoPlayer != null && isPlaying()) {
         float progress = (float) getCurrentPosition() / (float) getDuration();
         mHVVideoPlayer.updateCurrentTimeWhenPlaying((int) (progress * 100), getBufferPercentage());
       }

@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.media.MediaPlayer;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +12,7 @@ import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.RelativeLayout;
 import org.geeklub.hvmediaplayer.utils.DensityUtil;
+import org.geeklub.hvmediaplayer.utils.TimeUtil;
 import org.geeklub.hvmediaplayer.widgets.video.support_commands.Command;
 import org.geeklub.hvmediaplayer.widgets.video.support_commands.ExpandCommand;
 import org.geeklub.hvmediaplayer.widgets.video.support_commands.PauseCommand;
@@ -21,6 +23,8 @@ import org.geeklub.hvmediaplayer.widgets.video.support_commands.StartCommand;
  * Created by HelloVass on 16/4/13.
  */
 public class HVVideoPlayer extends RelativeLayout implements Mediator {
+
+  private static final String TAG = HVVideoPlayer.class.getSimpleName();
 
   private Context mContext;
 
@@ -34,7 +38,7 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator {
 
   private boolean mIsEnterFullScreen = false;
 
-  private boolean mIsControllerHidden;
+  private boolean mIsControllerHidden = false;
 
   private HVVideoPlayer(Builder builder) {
     super(builder.mContext);
@@ -46,15 +50,20 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator {
     init();
   }
 
+  /**
+   * 是否被添加到“Content”中
+   *
+   * @return 如果被添加到“Content”中，则返回true
+   */
   public boolean isAddedToContent() {
     return getParent() != null;
   }
 
   @Override public void doPlayPause() {
 
-    if (mHVVideoView.isPlaying()) {
+    if (mHVVideoView.isPlaying()) { // 如果正在播放中
       mHVVideoController.pause();
-    } else {
+    } else { // 如果停止播放了
       mHVVideoController.play();
     }
 
@@ -63,13 +72,13 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator {
 
   @Override public void doExpandShrink() {
 
-    if (mIsEnterFullScreen) {
+    if (mIsEnterFullScreen) { // 如果当前是全屏
       mHVVideoController.exitFullScreen();
-    } else {
+    } else { // 如果已经退出全屏了
       mHVVideoController.enterFullScreen();
     }
-    mIsEnterFullScreen = !mIsEnterFullScreen;
 
+    mIsEnterFullScreen = !mIsEnterFullScreen;
     updateShrinkExpand();
   }
 
@@ -89,6 +98,9 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator {
 
   @Override public void updateCurrentTimeWhenPlaying(int progress, int bufferPercentage) {
 
+    Log.i(TAG,
+        "updateCurrentTimeWhenPlaying -->>>" + TimeUtil.getTime(mHVVideoView.getCurrentPosition()));
+
     if (!mHVVideoController.isDraggingSeekBar()) {
       mHVVideoController.setSeekBarProgress(progress);
       mHVVideoController.setSeekBarSecondaryProgress(bufferPercentage);
@@ -97,6 +109,8 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator {
   }
 
   @Override public void onPrepared(MediaPlayer mp) {
+
+    Log.i(TAG, "onPrepared -->>>");
 
     mHVVideoController.setCurrentTime(0);
     mHVVideoController.setEndTime(mHVVideoView.getDuration());

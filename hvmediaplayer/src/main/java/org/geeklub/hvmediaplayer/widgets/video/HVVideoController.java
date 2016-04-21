@@ -50,20 +50,40 @@ public class HVVideoController extends FrameLayout {
     return mIsDraggingSeekBar;
   }
 
+  /**
+   * 执行播放命令
+   */
   public void play() {
-    mStartCommand.execute();
+    if (mStartCommand != null) {
+      mStartCommand.execute();
+    }
   }
 
+  /**
+   * 执行暂停命令
+   */
   public void pause() {
-    mPauseCommand.execute();
+    if (mPauseCommand != null) {
+      mPauseCommand.execute();
+    }
   }
 
+  /**
+   * 执行全屏命令
+   */
   public void enterFullScreen() {
-    mExpandCommand.execute();
+    if (mExpandCommand != null) {
+      mExpandCommand.execute();
+    }
   }
 
+  /**
+   * 执行退出全屏命令
+   */
   public void exitFullScreen() {
-    mShrinkCommand.execute();
+    if (mShrinkCommand != null) {
+      mShrinkCommand.execute();
+    }
   }
 
   public void setStartCommand(Command startCommand) {
@@ -131,7 +151,9 @@ public class HVVideoController extends FrameLayout {
 
     mPlayPauseButton.setOnClickListener(new OnClickListener() {
       @Override public void onClick(View v) {
-        mHVVideoPlayer.doPlayPause();
+        if (mHVVideoPlayer != null) {
+          mHVVideoPlayer.doPlayPause();
+        }
       }
     });
 
@@ -143,7 +165,9 @@ public class HVVideoController extends FrameLayout {
           return;
         }
 
-        mHVVideoPlayer.updateCurrentTimeWhenDragging(progress);
+        if (mHVVideoPlayer != null) {
+          mHVVideoPlayer.updateCurrentTimeWhenDragging(progress);
+        }
       }
 
       @Override public void onStartTrackingTouch(SeekBar seekBar) {
@@ -151,14 +175,20 @@ public class HVVideoController extends FrameLayout {
       }
 
       @Override public void onStopTrackingTouch(SeekBar seekBar) {
+
         mIsDraggingSeekBar = false;
-        mHVVideoPlayer.seekToStopTrackingTouchPosition(seekBar.getProgress());
+
+        if (mHVVideoPlayer != null) {
+          mHVVideoPlayer.seekToStopTrackingTouchPosition(seekBar.getProgress());
+        }
       }
     });
 
     mExpandShrinkButton.setOnClickListener(new OnClickListener() {
       @Override public void onClick(View v) {
-        mHVVideoPlayer.doExpandShrink();
+        if (mHVVideoPlayer != null) {
+          mHVVideoPlayer.doExpandShrink();
+        }
       }
     });
   }
