@@ -38,6 +38,11 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator {
 
   private boolean mIsControllerHidden = false;
 
+  // 因为“VideoView”在“Activity”不可见的时候会销毁“MediaPlayer”
+  // 重新到前台的时候会重新初始化“MediaPlayer”
+  // 所以用一个全局变量来保存上次的播放进度
+  private int mCurrentPosition = 0;
+
   private HVVideoPlayer(Builder builder) {
     super(builder.mContext);
 
@@ -55,6 +60,24 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator {
    */
   public boolean isAddedToContent() {
     return getParent() != null;
+  }
+
+  /**
+   * 保存播放进度
+   */
+  public void onPause() {
+    mCurrentPosition = mHVVideoView.getCurrentPosition();
+    mHVVideoView.pause();
+    updatePausePlay();
+  }
+
+  /**
+   * 恢复播放进度
+   */
+  public void onResume() {
+    if (mCurrentPosition > 0) {
+      mHVVideoView.seekTo(mCurrentPosition);
+    }
   }
 
   @Override public void doPlayPause() {
@@ -104,6 +127,10 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator {
   }
 
   @Override public void onPrepared(MediaPlayer mp) {
+
+    if (mCurrentPosition > 0) {
+      return;
+    }
 
     mHVVideoController.setCurrentTime(0);
     mHVVideoController.setEndTime(mHVVideoView.getDuration());

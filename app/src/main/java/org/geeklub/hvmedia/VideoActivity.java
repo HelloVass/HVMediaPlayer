@@ -37,13 +37,29 @@ public class VideoActivity extends AppCompatActivity {
     mOpenVideoPlayerButton.setOnClickListener(new View.OnClickListener() {
       @Override public void onClick(View v) {
 
-        if (mVideoPlayer.isAddedToContent()){
+        if (mVideoPlayer.isAddedToContent()) {
           return;
         }
 
         addVideoPlayerToContentView();
       }
     });
+  }
+
+  @Override protected void onPause() {
+    super.onPause();
+
+    if (mVideoPlayer.isAddedToContent()) {
+      mVideoPlayer.onPause();
+    }
+  }
+
+  @Override protected void onResume() {
+    super.onResume();
+
+    if (mVideoPlayer.isAddedToContent()) {
+      mVideoPlayer.onResume();
+    }
   }
 
   private void addVideoPlayerToContentView() {

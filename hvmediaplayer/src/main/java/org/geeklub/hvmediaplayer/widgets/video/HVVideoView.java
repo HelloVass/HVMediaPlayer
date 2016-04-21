@@ -3,7 +3,6 @@ package org.geeklub.hvmediaplayer.widgets.video;
 import android.content.Context;
 import android.media.MediaPlayer;
 import android.os.CountDownTimer;
-import android.util.Log;
 import android.widget.VideoView;
 
 /**
@@ -27,7 +26,7 @@ public class HVVideoView extends VideoView {
   }
 
   public void resetTimer() {
-    mUpdatePlayableTimer = new UpdatePlayableTimer(getDuration(), 250L);
+    mUpdatePlayableTimer = new UpdatePlayableTimer(Integer.MAX_VALUE, 250L); // 基本上就等于一个无限循环了
     mUpdatePlayableTimer.start();
   }
 
@@ -73,8 +72,6 @@ public class HVVideoView extends VideoView {
     }
 
     @Override public void onTick(long millisUntilFinished) {
-
-      Log.i(TAG, "onTick isPlaying -->>>" + isPlaying());
 
       if (mHVVideoPlayer != null && isPlaying()) {
         float progress = (float) getCurrentPosition() / (float) getDuration();
