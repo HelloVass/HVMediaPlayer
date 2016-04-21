@@ -118,18 +118,38 @@ public class HVVideoController extends FrameLayout {
     mExpandShrinkButton.setImageResource(R.mipmap.ic_fullscreen_exit_white_24dp);
   }
 
+  /**
+   * 更新当前的时间
+   *
+   * @param timeInMillis 当前时间
+   */
   public void setCurrentTime(long timeInMillis) {
     mCurrentTime.setText(TimeUtil.getTime(timeInMillis));
   }
 
+  /**
+   * 视频总长度
+   *
+   * @param timeInMillis 总时长
+   */
   public void setEndTime(long timeInMillis) {
     mEndTime.setText(TimeUtil.getTime(timeInMillis));
   }
 
+  /**
+   * 设置当前播放进度
+   *
+   * @param progress 播放进度
+   */
   public void setSeekBarProgress(int progress) {
     mSeekBar.setProgress(progress);
   }
 
+  /**
+   * 设置缓冲进度
+   *
+   * @param secondaryProgress 缓冲进度
+   */
   public void setSeekBarSecondaryProgress(int secondaryProgress) {
     mSeekBar.setSecondaryProgress(secondaryProgress);
   }
