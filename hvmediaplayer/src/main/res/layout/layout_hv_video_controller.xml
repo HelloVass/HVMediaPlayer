@@ -16,7 +16,7 @@
     android:contentDescription="@null"
     android:padding="8dp"
     android:scaleType="centerCrop"
-    android:src="@mipmap/ic_play_circle_filled_white_24dp" />
+    android:src="@mipmap/ic_play_arrow_white_24dp" />
 
 
   <TextView
