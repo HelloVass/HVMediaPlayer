@@ -26,13 +26,15 @@ public class HVVideoView extends VideoView {
   }
 
   public void resetTimer() {
-    mUpdatePlayableTimer = new UpdatePlayableTimer(Integer.MAX_VALUE, 250L); // 基本上就等于一个无限循环了
+    mUpdatePlayableTimer = new UpdatePlayableTimer(getDuration(), 250L);
     mUpdatePlayableTimer.start();
   }
 
   public void stopTimer() {
-    mUpdatePlayableTimer.cancel();
-    mUpdatePlayableTimer = null;
+    if (mUpdatePlayableTimer != null) {
+      mUpdatePlayableTimer.cancel();
+      mUpdatePlayableTimer = null;
+    }
   }
 
   private void init() {
