@@ -22,7 +22,7 @@ import org.geeklub.hvmediaplayer.widgets.video.support_commands.StartCommand;
 /**
  * Created by HelloVass on 16/4/13.
  */
-public class HVVideoPlayer extends RelativeLayout implements Mediator {
+public class HVVideoPlayer extends RelativeLayout implements Mediator, HVVideoPlayerInterface {
 
   private static final String TAG = HVVideoPlayer.class.getSimpleName();
 
@@ -38,14 +38,11 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator {
 
   private ImageView mCloseButton;
 
-  private boolean mIsEnterFullScreen = false;
-
   private boolean mIsControllerHidden = false;
 
-  // 因为“VideoView”在“Activity”不可见的时候会销毁“MediaPlayer”
-  // 重新到前台的时候会重新初始化“MediaPlayer”
-  // 所以用一个全局变量来保存上次的播放进度
   private int mCurrentPosition = 0;
+
+  private HVVideoPlayerInterface.OnDismissListener mOnDismissListener;
 
   private HVVideoPlayer(Builder builder) {
     super(builder.mContext);
@@ -53,6 +50,7 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator {
     mContext = builder.mContext;
     mLayoutParams = builder.mLayoutParams;
     mVideoUrl = builder.mVideoUrl;
+    mOnDismissListener = builder.mOnDismissListener;
 
     init();
   }
@@ -67,46 +65,92 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator {
   }
 
   /**
-   * 保存播放进度
+   * 当前的播放进度是否被保存了
+   *
+   * @return 如果已经保存，则返回true
    */
-  public void onPause() {
+  public boolean isCurrentPositionSaved() {
+    return mCurrentPosition > 0;
+  }
+
+  /**
+   * 重新加载
+   */
+  public void reload() {
+    setVisibility(VISIBLE);
+    mHVVideoView.resume();
+  }
+
+  /**
+   * 保存当前的播放进度
+   */
+  public void save() {
     mCurrentPosition = mHVVideoView.getCurrentPosition();
-    mHVVideoView.pause();
+    mHVVideoController.pause();
     updatePausePlay();
   }
 
   /**
-   * 恢复播放进度
+   * 恢复之前的播放进度
    */
-  public void onResume() {
-    if (mCurrentPosition > 0) {
+  public void restore() {
+    if (isCurrentPositionSaved()) {
       mHVVideoView.seekTo(mCurrentPosition);
     }
+  }
+
+  /**
+   * 当播放器所在的Activity销毁
+   */
+  public void onDestroy() {
+    mHVVideoView.stopTimer();
+  }
+
+  /**
+   * 关闭播放器
+   */
+  @Override public void close() {
+    changeScreenOrientationToPortrait(); // 将屏幕的方向恢复为竖直
+
+    mHVVideoView.stopTimer();
+    mHVVideoView.stopPlayback();
+
+    mHVVideoController.hide();
+    mHVVideoController.reset();
+
+    mIsControllerHidden = false;
+    mCurrentPosition = 0;
+
+    setVisibility(GONE);
   }
 
   @Override public void doPlayPause() {
 
     if (mHVVideoView.isPlaying()) { // 如果正在播放中
       mHVVideoController.pause();
-    } else { // 如果停止播放了
+      mHVVideoController.displayPlayImg();
+    } else {
       mHVVideoController.play();
+      mHVVideoController.displayPauseImg();
     }
-
-    updatePausePlay();
   }
 
   @Override public void doExpandShrink() {
 
-    if (mIsEnterFullScreen) { // 如果当前是全屏
+    if (mHVVideoController.isEnterFullScreen()) { // 如果当前是全屏
       mHVVideoController.exitFullScreen();
-    } else { // 如果已经退出全屏了
+    } else { // 如果已经退出全屏
       mHVVideoController.enterFullScreen();
     }
 
-    mIsEnterFullScreen = !mIsEnterFullScreen;
     updateShrinkExpand();
   }
 
+  /**
+   * 用户拖动SeekBar的时候更新当前时间
+   *
+   * @param progress 当前的进度
+   */
   @Override public void updateCurrentTimeWhenDragging(int progress) {
 
     float percent = (float) progress / (float) 100;
@@ -114,6 +158,11 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator {
     mHVVideoController.setCurrentTime(timeInMillis);
   }
 
+  /**
+   * 用户停止拖动后，将播放位置移动到指定的位置
+   *
+   * @param progress 当前的进度
+   */
   @Override public void seekToStopTrackingTouchPosition(int progress) {
 
     float percent = (float) progress / (float) 100;
@@ -121,6 +170,12 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator {
     mHVVideoView.seekTo(timeInMillis);
   }
 
+  /**
+   * 在播放的时候，更新当前时间
+   *
+   * @param progress 当前的进度
+   * @param bufferPercentage 缓冲的进度
+   */
   @Override public void updateCurrentTimeWhenPlaying(int progress, int bufferPercentage) {
 
     if (!mHVVideoController.isDraggingSeekBar()) {
@@ -130,32 +185,43 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator {
     }
   }
 
+  /**
+   * 播放器准备完毕
+   *
+   * @param mp MediaPlayer
+   */
   @Override public void onPrepared(MediaPlayer mp) {
-
-    if (mCurrentPosition > 0) {
-      return;
-    }
 
     mHVVideoController.show();
 
-    mHVVideoController.setCurrentTime(0);
-    mHVVideoController.setEndTime(mHVVideoView.getDuration());
+    if (isCurrentPositionSaved()) { // 如果之前的播放进度被保存了，则不更新Controller的UI
+      return;
+    }
 
-    mHVVideoController.setSeekBarProgress(0);
-    mHVVideoController.setSeekBarSecondaryProgress(0);
+    mHVVideoController.reset(); // 重置Controller
   }
 
+  /**
+   * 播放结束
+   *
+   * @param mp MediaPlayer
+   */
   @Override public void onCompletion(MediaPlayer mp) {
 
+    mHVVideoController.displayPlayImg();
     mHVVideoController.setCurrentTime(0);
     mHVVideoController.setSeekBarProgress(0);
     mHVVideoController.setSeekBarSecondaryProgress(0);
-    mHVVideoController.displayPlayImg();
 
     mHVVideoView.stopTimer();
     mHVVideoView.seekTo(0);
   }
 
+  /**
+   * 播放出错
+   *
+   * @param mp MediaPlayer
+   */
   @Override public void onError(MediaPlayer mp, int what, int extra) {
 
   }
@@ -165,14 +231,12 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator {
     setLayoutParams(mLayoutParams);
     setBackgroundColor(Color.BLACK);
 
-    // 创建接受者
+    // setup VideoView
     mHVVideoView = new HVVideoView(mContext);
     mHVVideoView.setVideoPath(mVideoUrl);
     mHVVideoView.setHVVideoPlayer(this);
-
     mHVVideoView.setOnTouchListener(new OnTouchListener() {
       @Override public boolean onTouch(View v, MotionEvent event) {
-
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
           hideOrShowMediaController();
         }
@@ -180,35 +244,40 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator {
       }
     });
 
-    // 创建请求者
+    // setup controller
     mHVVideoController = new HVVideoController(mContext);
     mHVVideoController.setHVVideoPlayer(this);
     mHVVideoController.hide();
+    setControllerSupportCommands();
 
-    // 构造命令
-    Command startCommand = new StartCommand(mHVVideoView);
-    Command pauseCommand = new PauseCommand(mHVVideoView);
-    Command expandCommand = new ExpandCommand((Activity) mContext, getLayoutParams());
-    Command shrinkCommand = new ShrinkCommand((Activity) mContext, getLayoutParams());
-
-    // 设置命令
-    mHVVideoController.setStartCommand(startCommand);
-    mHVVideoController.setPauseCommand(pauseCommand);
-    mHVVideoController.setExpandCommand(expandCommand);
-    mHVVideoController.setShrinkCommand(shrinkCommand);
-
-    // 创建关闭按钮
+    // setup close button
     mCloseButton = new ImageView(mContext);
     mCloseButton.setImageResource(R.mipmap.ic_close_white_24dp);
     mCloseButton.setOnClickListener(new OnClickListener() {
       @Override public void onClick(View v) {
-
+        close();
+        if (mOnDismissListener != null) {
+          mOnDismissListener.dismiss(HVVideoPlayer.this);
+        }
       }
     });
 
     addPlayable();
     addController();
     addCloseButton();
+  }
+
+  private void setControllerSupportCommands() {
+
+    Command startCommand = new StartCommand(mHVVideoView);
+    Command pauseCommand = new PauseCommand(mHVVideoView);
+    Command expandCommand = new ExpandCommand((Activity) mContext, getLayoutParams());
+    Command shrinkCommand = new ShrinkCommand((Activity) mContext, getLayoutParams());
+
+    mHVVideoController.setStartCommand(startCommand);
+    mHVVideoController.setPauseCommand(pauseCommand);
+    mHVVideoController.setExpandCommand(expandCommand);
+    mHVVideoController.setShrinkCommand(shrinkCommand);
   }
 
   private void updatePausePlay() {
@@ -222,16 +291,33 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator {
 
   private void updateShrinkExpand() {
 
-    if (mIsEnterFullScreen) {
+    if (mHVVideoController.isEnterFullScreen()) {
       mHVVideoController.displayShrinkImg();
     } else {
       mHVVideoController.displayExpandImg();
     }
   }
 
+  private void changeScreenOrientationToPortrait() {
+
+    if (!isAddedToContent()) {
+      return;
+    }
+
+    if (!mHVVideoController.isEnterFullScreen()) {
+      return;
+    }
+
+    mHVVideoController.exitFullScreen();
+  }
+
   private void hideOrShowMediaController() {
 
     if (mHVVideoController == null) {
+      return;
+    }
+
+    if (!mHVVideoController.isShown()) {
       return;
     }
 
@@ -289,6 +375,8 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator {
 
     private ViewGroup.LayoutParams mLayoutParams;
 
+    private HVVideoPlayerInterface.OnDismissListener mOnDismissListener;
+
     public Builder(Context context) {
       mContext = context;
     }
@@ -300,6 +388,12 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator {
 
     public Builder setLayoutParams(ViewGroup.LayoutParams layoutParams) {
       mLayoutParams = layoutParams;
+      return this;
+    }
+
+    public Builder setOnDismissListener(
+        HVVideoPlayerInterface.OnDismissListener onDismissListener) {
+      mOnDismissListener = onDismissListener;
       return this;
     }
 

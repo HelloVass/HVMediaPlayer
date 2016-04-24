@@ -33,40 +33,49 @@ public class VideoActivity extends AppCompatActivity {
         .setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
             DensityUtil.dip2px(this, 220)))
         .build();
+    addVideoPlayerToContentView();
 
     mOpenVideoPlayerButton.setOnClickListener(new View.OnClickListener() {
       @Override public void onClick(View v) {
 
-        if (mVideoPlayer.isAddedToContent()) {
+        if (!mVideoPlayer.isAddedToContent()) { // 播放器还未被添加到Content
           return;
         }
 
-        addVideoPlayerToContentView();
+        if (mVideoPlayer.isShown()) { // 播放器已经在显示了！
+          return;
+        }
+
+        mVideoPlayer.reload();
       }
     });
-  }
-
-  @Override protected void onPause() {
-    super.onPause();
-
-    if (mVideoPlayer.isAddedToContent()) {
-      mVideoPlayer.onPause();
-    }
   }
 
   @Override protected void onResume() {
     super.onResume();
 
     if (mVideoPlayer.isAddedToContent()) {
-      mVideoPlayer.onResume();
+      mVideoPlayer.restore();
     }
   }
 
-  private void addVideoPlayerToContentView() {
+  @Override protected void onPause() {
+    super.onPause();
 
+    if (mVideoPlayer.isAddedToContent()) {
+      mVideoPlayer.save();
+    }
+  }
+
+  @Override protected void onDestroy() {
+    super.onDestroy();
+
+    mVideoPlayer.onDestroy();
+  }
+
+  private void addVideoPlayerToContentView() {
     FrameLayout container =
         (FrameLayout) getWindow().getDecorView().findViewById(android.R.id.content);
-
     container.addView(mVideoPlayer);
   }
 }

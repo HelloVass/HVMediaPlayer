@@ -37,6 +37,8 @@ public class HVVideoController extends FrameLayout {
 
   private boolean mIsDraggingSeekBar = false;
 
+  private boolean mIsEnterFullScreen = false;
+
   public HVVideoController(Context context) {
     super(context);
     init();
@@ -46,12 +48,26 @@ public class HVVideoController extends FrameLayout {
     mHVVideoPlayer = HVVideoPlayer;
   }
 
+  public void hide() {
+    setVisibility(GONE);
+  }
+
   public void show() {
     setVisibility(VISIBLE);
   }
 
-  public void hide() {
-    setVisibility(GONE);
+  /**
+   * 重置操作栏
+   */
+  public void reset() {
+    displayPlayImg();
+    setCurrentTime(0);
+    setSeekBarProgress(0);
+    setSeekBarSecondaryProgress(0);
+    setEndTime(0);
+    displayExpandImg();
+    mIsDraggingSeekBar = false;
+    mIsEnterFullScreen = false;
   }
 
   /**
@@ -61,6 +77,10 @@ public class HVVideoController extends FrameLayout {
    */
   public boolean isDraggingSeekBar() {
     return mIsDraggingSeekBar;
+  }
+
+  public boolean isEnterFullScreen() {
+    return mIsEnterFullScreen;
   }
 
   /**
@@ -87,6 +107,7 @@ public class HVVideoController extends FrameLayout {
   public void enterFullScreen() {
     if (mExpandCommand != null) {
       mExpandCommand.execute();
+      mIsEnterFullScreen = true;
     }
   }
 
@@ -96,6 +117,7 @@ public class HVVideoController extends FrameLayout {
   public void exitFullScreen() {
     if (mShrinkCommand != null) {
       mShrinkCommand.execute();
+      mIsEnterFullScreen = false;
     }
   }
 
@@ -116,11 +138,11 @@ public class HVVideoController extends FrameLayout {
   }
 
   public void displayPlayImg() {
-    mPlayPauseButton.setImageResource(R.mipmap.ic_play_circle_filled_white_24dp);
+    mPlayPauseButton.setImageResource(R.mipmap.ic_play_arrow_white_24dp);
   }
 
   public void displayPauseImg() {
-    mPlayPauseButton.setImageResource(R.mipmap.ic_pause_circle_filled_white_24dp);
+    mPlayPauseButton.setImageResource(R.mipmap.ic_pause_white_24dp);
   }
 
   public void displayExpandImg() {
