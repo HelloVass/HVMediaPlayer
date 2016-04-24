@@ -61,11 +61,11 @@ public class HVAudioController extends FrameLayout {
   }
 
   public void displayPlayImg() {
-    mPlayPauseButton.setImageResource(R.mipmap.ic_play_circle_filled_white_24dp);
+    mPlayPauseButton.setImageResource(R.mipmap.ic_play_arrow_white_24dp);
   }
 
   public void displayPauseImg() {
-    mPlayPauseButton.setImageResource(R.mipmap.ic_pause_circle_filled_white_24dp);
+    mPlayPauseButton.setImageResource(R.mipmap.ic_pause_white_24dp);
   }
 
   public void setCurrentTime(long timeInMillis) {
