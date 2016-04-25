@@ -40,16 +40,46 @@ public class HVAudioController extends FrameLayout {
     mHVAudioPlayer = HVAudioPlayer;
   }
 
+  /**
+   * 重置操作栏
+   */
+  public void reset() {
+    displayPlayImg();
+    setCurrentTime(0);
+    setSeekBarProgress(0);
+    setSeekBarSecondaryProgress(0);
+    setEndTime(0);
+    mIsDraggingSeekBar = false;
+    setTranslationY(0.0F);
+  }
+
+  /**
+   * SeekBar 是否正在被用户拖动ing
+   *
+   * @return 如果正在被拖动，返回true
+   */
   public boolean isDraggingSeekBar() {
     return mIsDraggingSeekBar;
   }
 
   public void play() {
-    mStartCommand.execute();
+    if (mStartCommand != null) {
+      mStartCommand.execute();
+    }
   }
 
   public void pause() {
-    mPauseCommand.execute();
+    if (mPauseCommand != null) {
+      mPauseCommand.execute();
+    }
+  }
+
+  public void show() {
+    setVisibility(VISIBLE);
+  }
+
+  public void hide() {
+    setVisibility(GONE);
   }
 
   public void setStartCommand(Command startCommand) {
@@ -68,18 +98,38 @@ public class HVAudioController extends FrameLayout {
     mPlayPauseButton.setImageResource(R.mipmap.ic_pause_white_24dp);
   }
 
+  /**
+   * 更新当前的时间
+   *
+   * @param timeInMillis 当前时间
+   */
   public void setCurrentTime(long timeInMillis) {
     mCurrentTime.setText(TimeUtil.getTime(timeInMillis));
   }
 
+  /**
+   * 视频总长度
+   *
+   * @param timeInMillis 总时长
+   */
   public void setEndTime(long timeInMillis) {
     mEndTime.setText(TimeUtil.getTime(timeInMillis));
   }
 
+  /**
+   * 设置当前播放进度
+   *
+   * @param progress 播放进度
+   */
   public void setSeekBarProgress(int progress) {
     mSeekBar.setProgress(progress);
   }
 
+  /**
+   * 设置缓冲进度
+   *
+   * @param secondaryProgress 缓冲进度
+   */
   public void setSeekBarSecondaryProgress(int secondaryProgress) {
     mSeekBar.setSecondaryProgress(secondaryProgress);
   }
@@ -100,7 +150,9 @@ public class HVAudioController extends FrameLayout {
 
     mPlayPauseButton.setOnClickListener(new OnClickListener() {
       @Override public void onClick(View v) {
-        mHVAudioPlayer.doPlayPause();
+        if (mHVAudioPlayer != null) {
+          mHVAudioPlayer.doPlayPause();
+        }
       }
     });
 
@@ -112,7 +164,9 @@ public class HVAudioController extends FrameLayout {
           return;
         }
 
-        mHVAudioPlayer.updateCurrentTimeWhenDragging(progress);
+        if (mHVAudioPlayer != null) {
+          mHVAudioPlayer.updateCurrentTimeWhenDragging(progress);
+        }
       }
 
       @Override public void onStartTrackingTouch(SeekBar seekBar) {
@@ -120,8 +174,12 @@ public class HVAudioController extends FrameLayout {
       }
 
       @Override public void onStopTrackingTouch(SeekBar seekBar) {
+
         mIsDraggingSeekBar = false;
-        mHVAudioPlayer.seekToStopTrackingTouchPosition(seekBar.getProgress());
+
+        if (mHVAudioPlayer != null) {
+          mHVAudioPlayer.seekToStopTrackingTouchPosition(seekBar.getProgress());
+        }
       }
     });
   }

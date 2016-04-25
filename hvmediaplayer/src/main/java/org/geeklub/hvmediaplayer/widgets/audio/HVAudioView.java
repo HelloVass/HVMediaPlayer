@@ -164,14 +164,20 @@ public class HVAudioView extends RelativeLayout {
     }
   }
 
+  public void resume() {
+    openAudio();
+  }
+
   public void resetTimer() {
-    mUpdatePlayableTimer = new UpdatePlayableTimer(getDuration(), 250L);
+    mUpdatePlayableTimer = new UpdatePlayableTimer(Integer.MAX_VALUE, 250L); // 这里相当于无限loop
     mUpdatePlayableTimer.start();
   }
 
   public void stopTimer() {
-    mUpdatePlayableTimer.cancel();
-    mUpdatePlayableTimer = null;
+    if (mUpdatePlayableTimer != null) {
+      mUpdatePlayableTimer.cancel();
+      mUpdatePlayableTimer = null;
+    }
   }
 
   @Override protected void onDetachedFromWindow() {

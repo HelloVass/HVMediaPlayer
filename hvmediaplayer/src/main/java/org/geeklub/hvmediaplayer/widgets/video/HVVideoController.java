@@ -48,14 +48,6 @@ public class HVVideoController extends FrameLayout {
     mHVVideoPlayer = HVVideoPlayer;
   }
 
-  public void hide() {
-    setVisibility(GONE);
-  }
-
-  public void show() {
-    setVisibility(VISIBLE);
-  }
-
   /**
    * 重置操作栏
    */
@@ -68,6 +60,7 @@ public class HVVideoController extends FrameLayout {
     displayExpandImg();
     mIsDraggingSeekBar = false;
     mIsEnterFullScreen = false;
+    setTranslationY(0.0F);
   }
 
   /**
@@ -83,27 +76,18 @@ public class HVVideoController extends FrameLayout {
     return mIsEnterFullScreen;
   }
 
-  /**
-   * 执行播放命令
-   */
   public void play() {
     if (mStartCommand != null) {
       mStartCommand.execute();
     }
   }
 
-  /**
-   * 执行暂停命令
-   */
   public void pause() {
     if (mPauseCommand != null) {
       mPauseCommand.execute();
     }
   }
 
-  /**
-   * 执行全屏命令
-   */
   public void enterFullScreen() {
     if (mExpandCommand != null) {
       mExpandCommand.execute();
@@ -111,9 +95,6 @@ public class HVVideoController extends FrameLayout {
     }
   }
 
-  /**
-   * 执行退出全屏命令
-   */
   public void exitFullScreen() {
     if (mShrinkCommand != null) {
       mShrinkCommand.execute();
@@ -135,6 +116,14 @@ public class HVVideoController extends FrameLayout {
 
   public void setShrinkCommand(Command shrinkCommand) {
     mShrinkCommand = shrinkCommand;
+  }
+
+  public void hide() {
+    setVisibility(GONE);
+  }
+
+  public void show() {
+    setVisibility(VISIBLE);
   }
 
   public void displayPlayImg() {

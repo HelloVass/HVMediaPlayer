@@ -51,7 +51,6 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator, HVVideoPl
     mLayoutParams = builder.mLayoutParams;
     mVideoUrl = builder.mVideoUrl;
     mOnDismissListener = builder.mOnDismissListener;
-
     init();
   }
 
@@ -100,13 +99,6 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator, HVVideoPl
   }
 
   /**
-   * 当播放器所在的Activity销毁
-   */
-  public void onDestroy() {
-    mHVVideoView.stopTimer();
-  }
-
-  /**
    * 关闭播放器
    */
   @Override public void close() {
@@ -120,8 +112,14 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator, HVVideoPl
 
     mIsControllerHidden = false;
     mCurrentPosition = 0;
-
     setVisibility(GONE);
+  }
+
+  /**
+   * 销毁播放器的时候调用
+   */
+  public void onDestroy() {
+    mHVVideoView.stopTimer();
   }
 
   @Override public void doPlayPause() {
@@ -152,7 +150,6 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator, HVVideoPl
    * @param progress 当前的进度
    */
   @Override public void updateCurrentTimeWhenDragging(int progress) {
-
     float percent = (float) progress / (float) 100;
     int timeInMillis = (int) (percent * mHVVideoView.getDuration());
     mHVVideoController.setCurrentTime(timeInMillis);
@@ -198,7 +195,12 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator, HVVideoPl
       return;
     }
 
-    mHVVideoController.reset(); // 重置Controller
+    mHVVideoController.displayPlayImg();
+    mHVVideoController.setCurrentTime(0);
+    mHVVideoController.setSeekBarProgress(0);
+    mHVVideoController.setSeekBarSecondaryProgress(0);
+    mHVVideoController.setEndTime(mHVVideoView.getDuration());
+    mHVVideoController.displayExpandImg();
   }
 
   /**
@@ -280,6 +282,38 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator, HVVideoPl
     mHVVideoController.setShrinkCommand(shrinkCommand);
   }
 
+  private void addPlayable() {
+    LayoutParams videoViewLayoutParams =
+        new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+    videoViewLayoutParams.addRule(CENTER_IN_PARENT);
+    videoViewLayoutParams.leftMargin = DensityUtil.dip2px(getContext(), 8);
+    videoViewLayoutParams.rightMargin = DensityUtil.dip2px(getContext(), 8);
+    mHVVideoView.setLayoutParams(videoViewLayoutParams);
+    addView(mHVVideoView);
+  }
+
+  private void addController() {
+    LayoutParams controllerLayoutParams =
+        new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, DensityUtil.dip2px(getContext(), 40));
+    controllerLayoutParams.addRule(ALIGN_PARENT_BOTTOM);
+    mHVVideoController.setLayoutParams(controllerLayoutParams);
+    addView(mHVVideoController);
+  }
+
+  private void addCloseButton() {
+    LayoutParams closeButtonLayoutParams =
+        new LayoutParams(DensityUtil.dip2px(mContext, 24), DensityUtil.dip2px(mContext, 24));
+    closeButtonLayoutParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+    closeButtonLayoutParams.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+    closeButtonLayoutParams.setMargins(0, DensityUtil.dip2px(mContext, 16),
+        DensityUtil.dip2px(mContext, 16), 0);
+    mCloseButton.setLayoutParams(closeButtonLayoutParams);
+    addView(mCloseButton);
+  }
+
+  /**
+   * 更新播放、暂停按钮
+   */
   private void updatePausePlay() {
 
     if (mHVVideoView.isPlaying()) {
@@ -289,6 +323,9 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator, HVVideoPl
     }
   }
 
+  /**
+   * 更细全屏、退出全屏按钮
+   */
   private void updateShrinkExpand() {
 
     if (mHVVideoController.isEnterFullScreen()) {
@@ -336,35 +373,6 @@ public class HVVideoPlayer extends RelativeLayout implements Mediator, HVVideoPl
     }
 
     mIsControllerHidden = !mIsControllerHidden;
-  }
-
-  private void addPlayable() {
-    LayoutParams videoViewLayoutParams =
-        new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-    videoViewLayoutParams.addRule(CENTER_IN_PARENT);
-    videoViewLayoutParams.leftMargin = DensityUtil.dip2px(getContext(), 8);
-    videoViewLayoutParams.rightMargin = DensityUtil.dip2px(getContext(), 8);
-    mHVVideoView.setLayoutParams(videoViewLayoutParams);
-    addView(mHVVideoView);
-  }
-
-  private void addController() {
-    LayoutParams controllerLayoutParams =
-        new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, DensityUtil.dip2px(getContext(), 40));
-    controllerLayoutParams.addRule(ALIGN_PARENT_BOTTOM);
-    mHVVideoController.setLayoutParams(controllerLayoutParams);
-    addView(mHVVideoController);
-  }
-
-  private void addCloseButton() {
-    LayoutParams closeButtonLayoutParams =
-        new LayoutParams(DensityUtil.dip2px(mContext, 24), DensityUtil.dip2px(mContext, 24));
-    closeButtonLayoutParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
-    closeButtonLayoutParams.addRule(RelativeLayout.ALIGN_PARENT_TOP);
-    closeButtonLayoutParams.setMargins(0, DensityUtil.dip2px(mContext, 16),
-        DensityUtil.dip2px(mContext, 16), 0);
-    mCloseButton.setLayoutParams(closeButtonLayoutParams);
-    addView(mCloseButton);
   }
 
   public static class Builder {
