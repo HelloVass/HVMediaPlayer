@@ -38,27 +38,37 @@ public class AudioActivity extends AppCompatActivity {
     mAudioPlayer = new HVAudioPlayer.Builder(this).setAudioUrl(TEST_AUDIO_URL)
         .setCoverImageUrl(TEST_AUDIO_COVER_URL)
         .setImageLoader(new GlideImageLoaderFactory(this).createImageLoader())
-        .setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+        .setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
             DensityUtil.dip2px(this, 220)))
         .build();
+
+    addAudioPlayerToContentView();
 
     mOpenAudioPlayerButton.setOnClickListener(new View.OnClickListener() {
       @Override public void onClick(View v) {
 
-        if (mAudioPlayer.getParent() != null) {
+        if (!mAudioPlayer.isAddedToContent()) { // 播放器还未被添加到Content
           return;
         }
 
-        addAudioPlayerToContentView();
+        if (mAudioPlayer.isShown()) { // 播放器已经在显示了！
+          return;
+        }
+
+        mAudioPlayer.reload();
       }
     });
   }
 
-  private void addAudioPlayerToContentView() {
+  @Override protected void onDestroy() {
+    super.onDestroy();
 
+    mAudioPlayer.onDestroy();
+  }
+
+  private void addAudioPlayerToContentView() {
     FrameLayout container =
         (FrameLayout) getWindow().getDecorView().findViewById(android.R.id.content);
-
     container.addView(mAudioPlayer);
   }
 }
