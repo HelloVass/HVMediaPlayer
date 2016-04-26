@@ -3,6 +3,12 @@
 ## 介绍
 一套针对**网络视频、音频**的播放器解决方案
 
+## 音频播放器演示
+![AudioPlayer Demo](./design/AudioPlayer Demo)
+
+## 视频播放器演示
+![VideoPlayer Demo](./design/VideoPlayer Demo)
+
 ## 使用
 
 ### 构造音频播放器
