@@ -4,10 +4,10 @@
 一套针对**网络视频、音频**的播放器解决方案
 
 ## 音频播放器演示
-![AudioPlayer Demo](./design/AudioPlayer Demo)
+<img src="./design/AudioPlayer Demo.gif" width="400px"/>
 
 ## 视频播放器演示
-![VideoPlayer Demo](./design/VideoPlayer Demo)
+<img src="./design/VideoPlayer Demo.gif" width="400px"/>
 
 ## 使用
 
