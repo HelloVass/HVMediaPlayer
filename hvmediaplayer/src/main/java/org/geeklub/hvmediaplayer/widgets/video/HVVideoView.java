@@ -7,6 +7,7 @@ import android.widget.VideoView;
 
 /**
  * Created by HelloVass on 16/3/24.
+ * 可以播放的View，这里选择集成系统的 VideoView
  */
 public class HVVideoView extends VideoView {
 
@@ -26,7 +27,7 @@ public class HVVideoView extends VideoView {
   }
 
   public void resetTimer() {
-    mUpdatePlayableTimer = new UpdatePlayableTimer(getDuration(), 250L);
+    mUpdatePlayableTimer = new UpdatePlayableTimer(Integer.MAX_VALUE, 250L);
     mUpdatePlayableTimer.start();
   }
 

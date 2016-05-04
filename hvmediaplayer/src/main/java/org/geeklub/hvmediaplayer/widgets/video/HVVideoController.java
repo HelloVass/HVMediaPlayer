@@ -12,6 +12,7 @@ import org.geeklub.hvmediaplayer.utils.TimeUtil;
 
 /**
  * Created by HelloVass on 16/4/6.
+ * 播放器的操作栏
  */
 public class HVVideoController extends FrameLayout {
 

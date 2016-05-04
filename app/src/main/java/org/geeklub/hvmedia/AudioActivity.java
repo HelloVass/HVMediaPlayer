@@ -63,7 +63,7 @@ public class AudioActivity extends AppCompatActivity {
   @Override protected void onDestroy() {
     super.onDestroy();
 
-    mAudioPlayer.onDestroy();
+    mAudioPlayer.destory();
   }
 
   private void addAudioPlayerToContentView() {

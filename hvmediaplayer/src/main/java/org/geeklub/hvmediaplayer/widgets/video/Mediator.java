@@ -4,6 +4,8 @@ import android.media.MediaPlayer;
 
 /**
  * Created by HelloVass on 16/4/13.
+ *
+ * 中介者接口
  */
 public interface Mediator {
 
@@ -39,9 +41,24 @@ public interface Mediator {
    */
   void updateCurrentTimeWhenPlaying(int progress, int bufferPercentage);
 
+  /**
+   * 准备完毕
+   *
+   * @param mp MediaPlayer
+   */
   void onPrepared(MediaPlayer mp);
 
+  /**
+   * 播放完毕
+   *
+   * @param mp MediaPlayer
+   */
   void onCompletion(MediaPlayer mp);
 
+  /**
+   * 播放出错
+   *
+   * @param mp MediaPlayer
+   */
   void onError(MediaPlayer mp, int what, int extra);
 }

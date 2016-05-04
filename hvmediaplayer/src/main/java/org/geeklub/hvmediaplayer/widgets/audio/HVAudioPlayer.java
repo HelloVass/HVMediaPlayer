@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import org.geeklub.hvmediaplayer.R;
@@ -73,7 +74,7 @@ public class HVAudioPlayer extends RelativeLayout implements Mediator, HVAudioPl
   }
 
   /**
-   * 关闭播放器
+   * 释放MediaPlayer，隐藏播放器
    */
   @Override public void close() {
 
@@ -90,7 +91,7 @@ public class HVAudioPlayer extends RelativeLayout implements Mediator, HVAudioPl
   /**
    * 销毁播放器的时候调用
    */
-  public void onDestroy() {
+  public void destory() {
     mHVAudioView.stopTimer();
     mHVAudioView.stopPlayback();
   }
@@ -338,7 +339,21 @@ public class HVAudioPlayer extends RelativeLayout implements Mediator, HVAudioPl
     }
 
     public HVAudioPlayer build() {
+      checkFields();
       return new HVAudioPlayer(this);
+    }
+
+    private void checkFields() {
+
+      if (mLayoutParams == null) {
+        mLayoutParams = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+            DensityUtil.dip2px(mContext, 220.0F));
+      }
+
+      // TODO:撸一个默认的ImageLoader
+      if (mImageLoader == null) {
+        throw new IllegalStateException("imageloader can't be null");
+      }
     }
   }
 }

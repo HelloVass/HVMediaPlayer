@@ -70,7 +70,7 @@ public class VideoActivity extends AppCompatActivity {
   @Override protected void onDestroy() {
     super.onDestroy();
 
-    mVideoPlayer.onDestroy();
+    mVideoPlayer.destory();
   }
 
   private void addVideoPlayerToContentView() {
