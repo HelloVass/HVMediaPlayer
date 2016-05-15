@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/HVMedia.iml" filepath="$PROJECT_DIR$/HVMedia.iml" />
+      <module fileurl="file://$PROJECT_DIR$/HVMediaPlayer.iml" filepath="$PROJECT_DIR$/HVMediaPlayer.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/hvmediaplayer/hvmediaplayer.iml" filepath="$PROJECT_DIR$/hvmediaplayer/hvmediaplayer.iml" />
     </modules>
